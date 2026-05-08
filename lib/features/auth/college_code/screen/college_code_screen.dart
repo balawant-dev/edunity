@@ -80,7 +80,7 @@ class CollegeCodeScreen extends StatelessWidget {
                         text: TextSpan(
 
                           text: "Don't have a code? ",
-                          style: AppTextStyles.regular,
+                          style: AppTextStyles.regular(),
 
 
                           children: [

@@ -69,7 +69,7 @@ class ResetPasswordScreen extends StatelessWidget {
                 /// TITLE
                 Text(
                   "Change Password",
-                  style: AppTextStyles.bold,
+                  style: AppTextStyles.bold(),
                 ),
 
                 SizedBox(height: 16.h),
@@ -78,7 +78,7 @@ class ResetPasswordScreen extends StatelessWidget {
                   "Your new password must different from previous used password",
                   textAlign: TextAlign.center,
 
-                  style: AppTextStyles.medium,
+                  style: AppTextStyles.medium(),
                 ),
 
                 SizedBox(height: 55.h),

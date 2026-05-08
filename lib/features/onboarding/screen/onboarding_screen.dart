@@ -69,8 +69,8 @@ class OnboardingScreen extends StatelessWidget {
 
                   child: Text(
                     "Skip",
-                    style: AppTextStyles.medium.copyWith(
-                      fontSize: 15.sp,
+                    style: AppTextStyles.medium(
+                      size: 15.sp,
                       color: AppColors.white,
                     ),
                   ),

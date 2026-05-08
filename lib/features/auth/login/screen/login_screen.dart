@@ -59,9 +59,17 @@ class LoginScreen extends StatelessWidget {
 
                 SizedBox(height: 14.h),
 
-                Text(
-                  "SNS Vidyapeeth",
-                  style: AppTextStyles.bold,
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10,vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Color(0xffE8EEFC),
+                    borderRadius: BorderRadius.circular(4.r)
+                  ),
+                  child: Text(
+                    "SNS Vidyapeeth",
+                    style: AppTextStyles.semiBold(color: AppColors.primary),
+
+                  ),
                 ),
 
                 SizedBox(height: 50.h),
@@ -92,7 +100,7 @@ class LoginScreen extends StatelessWidget {
 
                       Text(
                         "SIGN INTO YOUR PORTAL",
-                        style: AppTextStyles.bold,
+                        style: AppTextStyles.bold(),
                       ),
 
                       SizedBox(height: 35.h),

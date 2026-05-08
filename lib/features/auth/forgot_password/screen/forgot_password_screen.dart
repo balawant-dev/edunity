@@ -68,7 +68,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                 /// TITLE
                 Text(
                   "Forgot Password?",
-                  style: AppTextStyles.bold,
+                  style: AppTextStyles.bold(),
                 ),
 
                 SizedBox(height: 16.h),
@@ -81,7 +81,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                     "Please enter your email to received a verification Code",
                     textAlign: TextAlign.center,
 
-                    style: AppTextStyles.medium,
+                    style: AppTextStyles.medium(),
                   ),
                 ),
 

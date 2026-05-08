@@ -67,7 +67,7 @@ class OtpScreen extends StatelessWidget {
                 /// TITLE
                 Text(
                   "Verify Your Mail",
-                  style: AppTextStyles.bold,
+                  style: AppTextStyles.bold(),
                 ),
 
                 SizedBox(height: 16.h),
@@ -80,7 +80,7 @@ class OtpScreen extends StatelessWidget {
                     "Please enter the 4-digit code sent to\nstudent@user.com",
                     textAlign: TextAlign.center,
 
-                    style: AppTextStyles.medium,
+                    style: AppTextStyles.medium(),
                   ),
                 ),
 
@@ -141,7 +141,7 @@ class OtpScreen extends StatelessWidget {
                                 textAlign: TextAlign.center,
 
                                 style:
-                                AppTextStyles.bold,
+                                AppTextStyles.bold(),
 
                                 decoration:
                                 InputDecoration(
@@ -219,7 +219,7 @@ class OtpScreen extends StatelessWidget {
 
                           Text(
                             "Didn't get the code? ",
-                            style: AppTextStyles.medium,
+                            style: AppTextStyles.medium(),
                           ),
 
                           GestureDetector(

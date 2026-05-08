@@ -39,8 +39,8 @@ class OnboardingItemWidget extends StatelessWidget {
             model.title,
             textAlign: TextAlign.center,
 
-            style: AppTextStyles.bold.copyWith(
-              fontSize: 30.sp,
+            style: AppTextStyles.bold(
+              size: 30.sp,
               color: AppColors.white,
             ),
           ),
@@ -52,8 +52,8 @@ class OnboardingItemWidget extends StatelessWidget {
             model.subtitle,
             textAlign: TextAlign.center,
 
-            style: AppTextStyles.regular.copyWith(
-              fontSize: 15.sp,
+            style: AppTextStyles.regular(
+              size: 15.sp,
               color: AppColors.grey,
               height: 1.6,
             ),
