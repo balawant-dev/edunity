@@ -5,6 +5,7 @@ import '../../../../common/widgets/auth_background.dart';
 import '../../../../common/widgets/custom_button.dart';
 import '../../../../common/widgets/custom_textfield.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_images.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/text_styles.dart';
 
@@ -23,8 +24,10 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return Scaffold(
+      backgroundColor: AppColors.deepPrimary,
 
-      body: AuthBackground(
+      body: BackgroundWithImage(
+        bgImage: AppImages.portalBg,
 
         child: SafeArea(
 
@@ -72,38 +75,58 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ),
 
-                SizedBox(height: 50.h),
+                SizedBox(height: 20.h),
 
                 /// CARD
                 Container(
 
                   padding: EdgeInsets.all(24.r),
-
-                  decoration: BoxDecoration(
-
-                    color: AppColors.white,
-
-                    borderRadius: BorderRadius.circular(28.r),
-
-                    boxShadow: [
+                  clipBehavior: Clip.antiAlias,
+                  decoration: ShapeDecoration(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(22.r),
+                    ),
+                    shadows: [
                       BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 15.r,
-                      ),
+                        color: Color(0x3F000000),
+                        blurRadius: 6.r,
+                        offset: Offset(-6, -6),
+                        spreadRadius: 0,
+                      )
                     ],
                   ),
+
+                  // decoration: BoxDecoration(
+                  //
+                  //   color: AppColors.white,
+                  //
+                  //   borderRadius: BorderRadius.circular(28.r),
+                  //
+                  //   boxShadow: [
+                  //     BoxShadow(
+                  //       color: Colors.black12,
+                  //       blurRadius: 15.r,
+                  //     ),
+                  //   ],
+                  // ),
 
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
 
                     children: [
 
-                      Text(
-                        "SIGN INTO YOUR PORTAL",
-                        style: AppTextStyles.bold(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "SIGN INTO YOUR PORTAL",
+                            style: AppTextStyles.bold(),
+                          ),
+                        ],
                       ),
 
-                      SizedBox(height: 35.h),
+                      SizedBox(height: 25.h),
 
                       CustomTextField(
                         controller: idController,
@@ -111,7 +134,7 @@ class LoginScreen extends StatelessWidget {
                         label: "User ID",
                       ),
 
-                      SizedBox(height: 22.h),
+                      SizedBox(height: 14.h),
 
                       CustomTextField(
                         controller: dobController,
@@ -119,7 +142,7 @@ class LoginScreen extends StatelessWidget {
                         label: "Date of Birth",
                       ),
 
-                      SizedBox(height: 22.h),
+                      SizedBox(height: 14.h),
 
                       CustomTextField(
                         controller: passwordController,

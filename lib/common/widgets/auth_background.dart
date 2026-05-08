@@ -32,23 +32,28 @@ class AuthBackground extends StatelessWidget {
       child: child,
     );
   }
-}class LoginBackground extends StatelessWidget {
+}class BackgroundWithImage extends StatelessWidget {
 
   final Widget child;
+  final String bgImage;
 
-  const LoginBackground({
+  const BackgroundWithImage({
     super.key,
     required this.child,
+    required this.bgImage,
   });
 
   @override
   Widget build(BuildContext context) {
 
     return Container(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height,
 
       clipBehavior: Clip.antiAlias,
       decoration:BoxDecoration(
-        image: DecorationImage(image: AssetImage(AppImages.loginBg),fit: BoxFit.fill)
+        //AppImages.loginBg
+        image: DecorationImage(image: AssetImage(bgImage),fit: BoxFit.fill)
       ),
 
       child: child,

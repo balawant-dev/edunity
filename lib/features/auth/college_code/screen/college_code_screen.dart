@@ -21,7 +21,8 @@ class CollegeCodeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.deepPrimary,
 
-      body: LoginBackground(
+      body: BackgroundWithImage(
+        bgImage: AppImages.loginBg,
 
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
