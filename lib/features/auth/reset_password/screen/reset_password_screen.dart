@@ -20,6 +20,7 @@ class ResetPasswordScreen extends StatelessWidget {
     context.watch<ResetPasswordProvider>();
 
     return Scaffold(
+      backgroundColor: AppColors.deepPrimary,
 
       body: AuthBackground(
 
@@ -69,7 +70,7 @@ class ResetPasswordScreen extends StatelessWidget {
                 /// TITLE
                 Text(
                   "Change Password",
-                  style: AppTextStyles.bold(),
+                  style: AppTextStyles.bold(color: AppColors.white),
                 ),
 
                 SizedBox(height: 16.h),
@@ -78,7 +79,7 @@ class ResetPasswordScreen extends StatelessWidget {
                   "Your new password must different from previous used password",
                   textAlign: TextAlign.center,
 
-                  style: AppTextStyles.medium(),
+                  style: AppTextStyles.regular(color: AppColors.white.withOpacity(0.7)),
                 ),
 
                 SizedBox(height: 55.h),
@@ -137,7 +138,7 @@ class ResetPasswordScreen extends StatelessWidget {
                         ),
                       ),
 
-                      SizedBox(height: 24.h),
+                      SizedBox(height: 16.h),
 
                       CustomTextField(
                         controller:
@@ -167,7 +168,7 @@ class ResetPasswordScreen extends StatelessWidget {
                         ),
                       ),
 
-                      SizedBox(height: 24.h),
+                      SizedBox(height: 16.h),
 
                       CustomTextField(
                         controller:

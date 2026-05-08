@@ -19,6 +19,7 @@ class ForgotPasswordScreen extends StatelessWidget {
     final provider = context.watch<ForgotPasswordProvider>();
 
     return Scaffold(
+      backgroundColor: AppColors.deepPrimary,
 
       body: AuthBackground(
 
@@ -68,7 +69,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                 /// TITLE
                 Text(
                   "Forgot Password?",
-                  style: AppTextStyles.bold(),
+                  style: AppTextStyles.bold(color: AppColors.white),
                 ),
 
                 SizedBox(height: 16.h),
@@ -81,7 +82,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                     "Please enter your email to received a verification Code",
                     textAlign: TextAlign.center,
 
-                    style: AppTextStyles.medium(),
+                    style: AppTextStyles.regular(color: AppColors.white.withOpacity(0.7)),
                   ),
                 ),
 
@@ -98,7 +99,7 @@ class ForgotPasswordScreen extends StatelessWidget {
 
                     color: AppColors.white,
 
-                    borderRadius: BorderRadius.circular(28.r),
+                    borderRadius: BorderRadius.circular(24.r),
 
                     boxShadow: [
                       BoxShadow(
@@ -127,7 +128,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                         ),
                       ),
 
-                      SizedBox(height: 24.h),
+                      SizedBox(height: 15.h),
 
                       /// EMAIL / PHONE
                       CustomTextField(
@@ -139,7 +140,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                         label: "EMAIL/PHONE",
                       ),
 
-                      SizedBox(height: 24.h),
+                      SizedBox(height: 15.h),
 
                       /// AADHAAR
                       CustomTextField(

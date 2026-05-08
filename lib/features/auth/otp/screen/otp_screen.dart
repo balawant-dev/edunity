@@ -18,6 +18,7 @@ class OtpScreen extends StatelessWidget {
     final provider = context.watch<OtpProvider>();
 
     return Scaffold(
+      backgroundColor: AppColors.deepPrimary,
 
       body: AuthBackground(
 
@@ -67,7 +68,7 @@ class OtpScreen extends StatelessWidget {
                 /// TITLE
                 Text(
                   "Verify Your Mail",
-                  style: AppTextStyles.bold(),
+                  style: AppTextStyles.bold(color: Colors.white),
                 ),
 
                 SizedBox(height: 16.h),
@@ -80,7 +81,7 @@ class OtpScreen extends StatelessWidget {
                     "Please enter the 4-digit code sent to\nstudent@user.com",
                     textAlign: TextAlign.center,
 
-                    style: AppTextStyles.medium(),
+                    style: AppTextStyles.regular(color: AppColors.white.withOpacity(0.7)),
                   ),
                 ),
 
@@ -241,7 +242,7 @@ class OtpScreen extends StatelessWidget {
                               AppTextStyles.semiBold(
                                 size: 14,
                                 color:
-                                AppColors.primary,
+                                AppColors.deepPrimary,
                               ),
                             ),
                           ),
