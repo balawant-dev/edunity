@@ -117,7 +117,7 @@ class ResetPasswordScreen extends StatelessWidget {
 
                         hintText: "••••••••",
 
-                        label: "CURRENT PASSWORD",
+                        labelText: "CURRENT PASSWORD",
 
                         obscureText:
                         provider.obscureCurrent,
@@ -147,7 +147,7 @@ class ResetPasswordScreen extends StatelessWidget {
 
                         hintText: "••••••••",
 
-                        label: "NEW PASSWORD",
+                        labelText: "NEW PASSWORD",
 
                         obscureText:
                         provider.obscureNew,
@@ -177,7 +177,7 @@ class ResetPasswordScreen extends StatelessWidget {
 
                         hintText: "••••••••",
 
-                        label:
+                        labelText:
                         "CONFIRM NEW PASSWORD",
 
                         obscureText:

@@ -14,6 +14,7 @@ class CollegeCodeScreen extends StatelessWidget {
 
   final TextEditingController codeController =
   TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -24,92 +25,117 @@ class CollegeCodeScreen extends StatelessWidget {
       body: BackgroundWithImage(
         bgImage: AppImages.loginBg,
 
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child:  Form(
+          key:_formKey,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
 
-          child: Column(
+            child: Column(
 
-            mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
 
-            children: [
-              SizedBox(height: 100.h),
-              Image.asset(
-                AppImages.loginLogo,
-                height: 80.h,
-              ),
-
-              // FlutterLogo(size: 100.sp),
-
-              SizedBox(height: 100.h),
-
-              Container(
-
-                padding: EdgeInsets.all(22.r),
-
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(16.r),
+              children: [
+                SizedBox(height: 100.h),
+                Image.asset(
+                  AppImages.loginLogo,
+                  height: 80.h,
                 ),
 
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                // FlutterLogo(size: 100.sp),
 
-                  children: [
+                SizedBox(height: 100.h),
 
-                    Text(
-                      "Enter Your College Code",
-                      style: AppTextStyles.semiBold(
-                        size: 14,
-                        color: const Color(0xFF444444),
-                      ),
-                    ),
+                Container(
 
-                    SizedBox(height: 10.h),
+                  padding: EdgeInsets.all(22.r),
 
-                    CustomTextField(
-                      controller: codeController,
-                      hintText:
-                      "Enter Your college code",
-                      suffixIcon: Image.asset("lib/assets/icons/ph_student_fill.png",scale: 3,),
-                    ),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
 
-                    SizedBox(height: 12.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
 
-                    Center(
-                      child: RichText(
+                    children: [
 
-                        text: TextSpan(
-
-                          text: "Don't have a code? ",
-                          style: AppTextStyles.regular(),
-
-
-                          children: [
-
-                            TextSpan(
-                              text: "Contact your college",
-                              style: AppTextStyles.semiBold(
-                                size: 14,
-                                color: AppColors.black,
-                              ),
-                            ),
-                          ],
+                      Text(
+                        "Enter Your College Code",
+                        style: AppTextStyles.semiBold(
+                          size: 14,
+                          color: const Color(0xFF444444),
                         ),
                       ),
-                    ),
 
-                    SizedBox(height: 35.h),
+                      SizedBox(height: 10.h),
 
-                    CustomButton(
-                      text: "Submit",
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.login);
-                      },
-                    ),
-                  ],
+                      CustomTextField(
+
+                        controller: codeController,
+                        maxLength: 8,
+                        keyboardType: TextInputType.number,
+                        validator: (value){
+
+                          if(value == null || value.isEmpty){
+                            return "Please enter college code";
+                          }
+
+                          if(value.length < 4){
+                            return "College code must be 6 characters";
+                          }
+
+                          return null;
+                        },
+                        // isRequired: true,
+                        // useFormValidation: true,
+                        hintText:
+                        "Enter Your college code",
+                        suffixIcon: Image.asset("lib/assets/icons/ph_student_fill.png",scale: 3,),
+                      ),
+
+                      SizedBox(height: 12.h),
+
+                      Center(
+                        child: RichText(
+
+                          text: TextSpan(
+
+                            text: "Don't have a code? ",
+                            style: AppTextStyles.regular(),
+
+
+                            children: [
+
+                              TextSpan(
+                                text: "Contact your college",
+                                style: AppTextStyles.semiBold(
+                                  size: 14,
+                                  color: AppColors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 35.h),
+
+                      CustomButton(
+                        text: "Submit",
+                        onTap: () {
+
+                          if (_formKey.currentState!.validate()) {
+
+                            Navigator.pushNamed(context, AppRoutes.login);
+                          }
+                        },
+                      )
+
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

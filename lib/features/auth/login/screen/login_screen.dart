@@ -131,7 +131,7 @@ class LoginScreen extends StatelessWidget {
                       CustomTextField(
                         controller: idController,
                         hintText: "Enter Your ID",
-                        label: "User ID",
+                        labelText: "User ID",
                       ),
 
                       SizedBox(height: 14.h),
@@ -139,7 +139,7 @@ class LoginScreen extends StatelessWidget {
                       CustomTextField(
                         controller: dobController,
                         hintText: "DD/MM/YYYY",
-                        label: "Date of Birth",
+                        labelText: "Date of Birth",
                       ),
 
                       SizedBox(height: 14.h),
@@ -147,7 +147,7 @@ class LoginScreen extends StatelessWidget {
                       CustomTextField(
                         controller: passwordController,
                         hintText: "Password",
-                        label: "Password",
+                        labelText: "Password",
                         obscureText: true,
                       ),
 

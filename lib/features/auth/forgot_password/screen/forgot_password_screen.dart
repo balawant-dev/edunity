@@ -119,7 +119,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                       CustomTextField(
                         controller: provider.idController,
                         hintText: "USER987654",
-                        label: "ID",
+                        labelText: "ID",
 
                         suffixIcon: Icon(
                           Icons.school_outlined,
@@ -137,7 +137,7 @@ class ForgotPasswordScreen extends StatelessWidget {
 
                         hintText: "email/phone",
 
-                        label: "EMAIL/PHONE",
+                        labelText: "EMAIL/PHONE",
                       ),
 
                       SizedBox(height: 15.h),
@@ -149,7 +149,7 @@ class ForgotPasswordScreen extends StatelessWidget {
 
                         hintText: "1234 5678 9012",
 
-                        label: "AADHAR NUMBER",
+                       labelText: "AADHAR NUMBER",
 
                         keyboardType: TextInputType.number,
                       ),
