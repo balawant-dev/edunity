@@ -1,8 +1,11 @@
 import 'package:edunity/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../core/constants/app_images.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/services/local_storage_service.dart';
+import '../../profile/provider/profile_provider.dart';
 import '../../token/repo/token_repo.dart';
 
 
@@ -21,6 +24,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final profilePro = context.watch<ProfileProvider>();
     return  Drawer(
       width: MediaQuery.of(context).size.width * 0.80,
       child: Column(
@@ -48,7 +52,19 @@ class _CustomDrawerState extends State<CustomDrawer> {
                             color: AppColors.white,
                           ),
                         ),
-                        child: Icon(Icons.person,size: 80,color: Colors.white,),
+                      child:     ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Image.network(
+                          profilePro.profileModel!.data.photo,
+                          height: 80,
+                          width: 80,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Image.asset(AppImages.logoNotFound, height: 80, width: 80, fit: BoxFit.cover);
+                          },
+                        ),
+                      ),
+                      //  child: Icon(Icons.person,size: 80,color: Colors.white,),
 
                       ),
 
@@ -59,7 +75,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
                   SizedBox(height: 12),
                   Text(
-                    "Guest User",
+                    profilePro.profileModel?.data?.fieldName??      "Guest User",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -68,7 +84,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   ),
 
                   Text(
-                    "+91 XXXXXXX",
+                    profilePro.profileModel?.data?.fieldMobile??     "+91 XXXXXXX",
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 14,

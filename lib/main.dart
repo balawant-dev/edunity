@@ -15,6 +15,7 @@ import 'features/auth/reset_password/provider/reset_password_provider.dart';
 import 'features/home/provider/home_provider.dart';
 import 'features/onboarding/provider/onboarding_provider.dart';
 
+import 'features/profile/provider/profile_provider.dart';
 import 'features/splash/provider/splash_provider.dart';
 //git code
 
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CollegeProvider()),
         ChangeNotifierProvider(create: (_) => LoginProvider()),
         ChangeNotifierProvider(create: (_) => ChangePasswordProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812),

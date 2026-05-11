@@ -15,4 +15,5 @@ class ApiEndpoints {
   static const String refreshToken = "/api/refresh-token";
 
   static const String logout = "/api/edu-logout";
+  static const String myProfile = "/api/my-profile";
 }
