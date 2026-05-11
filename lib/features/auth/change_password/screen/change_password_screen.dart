@@ -7,22 +7,18 @@ import '../../../../common/widgets/custom_button.dart';
 import '../../../../common/widgets/custom_textfield.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/text_styles.dart';
-import '../provider/reset_password_provider.dart';
+import '../provider/change_password_provider.dart';
 
-class ResetPasswordScreen extends StatefulWidget {
-  final String userId;
+class ChangePasswordScreen extends StatefulWidget {
 
-  final String otp;
 
-  const ResetPasswordScreen({super.key,   required this.userId,
-
-    required this.otp,});
+  const ChangePasswordScreen({super.key, });
 
   @override
-  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   final _formKey =
   GlobalKey<FormState>();
@@ -31,24 +27,24 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     super.initState();
 
-    Future.microtask(() {
-
-      context
-          .read<ResetPasswordProvider>()
-          .setData(
-
-        userId: widget.userId,
-
-        otp: widget.otp,
-      );
-    });
+    // Future.microtask(() {
+    //
+    //   context
+    //       .read<ChangePasswordProvider>()
+    //       .setData(
+    //
+    //     userId: widget.userId,
+    //
+    //     otp: widget.otp,
+    //   );
+    // });
   }
 
   @override
   Widget build(BuildContext context) {
 
     final provider =
-    context.watch<ResetPasswordProvider>();
+    context.watch<ChangePasswordProvider>();
 
     return Scaffold(
       backgroundColor: AppColors.deepPrimary,
@@ -100,7 +96,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
                 /// TITLE
                 Text(
-                  "Reset Password",
+                  "Change Password",
                   style: AppTextStyles.bold(color: AppColors.white),
                 ),
 
@@ -141,33 +137,33 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
                     children: [
 
-                      // CustomTextField(
-                      //   controller:
-                      //   provider
-                      //       .currentPasswordController,
-                      //
-                      //   hintText: "••••••••",
-                      //
-                      //   labelText: "CURRENT PASSWORD",
-                      //
-                      //   obscureText:
-                      //   provider.obscureCurrent,
-                      //
-                      //   suffixIcon: GestureDetector(
-                      //
-                      //     onTap: (){
-                      //       provider.toggleCurrent();
-                      //     },
-                      //
-                      //     child: Icon(
-                      //       provider.obscureCurrent
-                      //           ? Icons.visibility_off
-                      //           : Icons.visibility,
-                      //
-                      //       color: AppColors.grey,
-                      //     ),
-                      //   ),
-                      // ),
+                      CustomTextField(
+                        controller:
+                        provider
+                            .currentPasswordController,
+
+                        hintText: "••••••••",
+
+                        labelText: "CURRENT PASSWORD",
+
+                        obscureText:
+                        provider.obscureCurrent,
+
+                        suffixIcon: GestureDetector(
+
+                          onTap: (){
+                            provider.toggleCurrent();
+                          },
+
+                          child: Icon(
+                            provider.obscureCurrent
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+
+                            color: AppColors.grey,
+                          ),
+                        ),
+                      ),
 
                       SizedBox(height: 16.h),
 

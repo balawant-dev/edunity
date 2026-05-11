@@ -76,31 +76,46 @@ class LoginScreen extends StatelessWidget {
                   // ),
 
                   SizedBox(height: 14.h),
-                  Container(
-
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
-
-                    decoration: BoxDecoration(
-                      color: const Color(0xffE8EEFC),
-
-                      borderRadius:
-                      BorderRadius.circular(6.r),
-                    ),
-
-                    child: Text(
+                  Text(
 
 
-                      collegeModel.data.fullName,
-                      textAlign: TextAlign.center,
 
-                      style: AppTextStyles.semiBold(
-                        color: AppColors.primary,
-                      ),
+
+
+
+
+                    collegeModel.data.fullName,
+                    textAlign: TextAlign.center,
+
+                    style: AppTextStyles.semiBold(
+                      color: AppColors.primary,
                     ),
                   ),
+                  // Container(
+                  //
+                  //   padding: EdgeInsets.symmetric(
+                  //     horizontal: 12.w,
+                  //     vertical: 6.h,
+                  //   ),
+                  //
+                  //   decoration: BoxDecoration(
+                  //     color: const Color(0xffE8EEFC),
+                  //
+                  //     borderRadius:
+                  //     BorderRadius.circular(6.r),
+                  //   ),
+                  //
+                  //   child: Text(
+                  //
+                  //
+                  //     collegeModel.data.fullName,
+                  //     textAlign: TextAlign.center,
+                  //
+                  //     style: AppTextStyles.semiBold(
+                  //       color: AppColors.primary,
+                  //     ),
+                  //   ),
+                  // ),
 
                   // Container(
                   //   padding: EdgeInsets.symmetric(horizontal: 10,vertical: 4),
@@ -231,8 +246,23 @@ class LoginScreen extends StatelessWidget {
                               .passwordController,
                           hintText: "Password",
                           labelText: "Password",
-                          obscureText: true,
-                          suffixIcon:             Image.asset(AppImages.password,scale: 4,),
+                          obscureText:
+                          provider.obscureCurrent,
+                          suffixIcon: GestureDetector(
+
+                            onTap: (){
+                              provider.toggleCurrent();
+                            },
+
+                            child: Icon(
+                              provider.obscureCurrent
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+
+                              color: AppColors.grey,
+                            ),
+                          ),
+                          // suffixIcon:             Image.asset(AppImages.password,scale: 4,),
                           validator: (value){
 
                             if(value == null ||

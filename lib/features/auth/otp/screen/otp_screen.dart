@@ -6,12 +6,33 @@ import '../../../../common/widgets/auth_background.dart';
 import '../../../../common/widgets/custom_button.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/text_styles.dart';
+import '../../forgot_password/model/forgot_password_model.dart';
 import '../provider/otp_provider.dart';
 
-class OtpScreen extends StatelessWidget {
+class OtpScreen extends StatefulWidget {
+  final ForgotPasswordModel forgotData;
 
-  const OtpScreen({super.key});
+  const OtpScreen({super.key,required this.forgotData});
 
+  @override
+  State<OtpScreen> createState() => _OtpScreenState();
+}
+
+class _OtpScreenState extends State<OtpScreen> {
+  @override
+  void initState() {
+
+    super.initState();
+
+    Future.microtask(() {
+
+      context
+          .read<OtpProvider>()
+          .setForgotData(
+        widget.forgotData,
+      );
+    });
+  }
   @override
   Widget build(BuildContext context) {
 
@@ -212,37 +233,92 @@ class OtpScreen extends StatelessWidget {
                       SizedBox(height: 28.h),
 
                       /// RESEND
+                      // Row(
+                      //   mainAxisAlignment:
+                      //   MainAxisAlignment.center,
+                      //
+                      //   children: [
+                      //
+                      //     Text(
+                      //       "Didn't get the code? ",
+                      //       style: AppTextStyles.medium(),
+                      //     ),
+                      //
+                      //     GestureDetector(
+                      //
+                      //       onTap: provider.seconds == 0
+                      //           ? (){
+                      //         provider.resendOtp(
+                      //             context);
+                      //       }
+                      //           : null,
+                      //
+                      //       child: Text(
+                      //
+                      //         provider.seconds == 0
+                      //             ? "Resend"
+                      //             : "Resend in 0:${provider.seconds}",
+                      //
+                      //         style:
+                      //         AppTextStyles.semiBold(
+                      //           size: 14,
+                      //           color:
+                      //           AppColors.deepPrimary,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
+                      /// RESEND
                       Row(
+
                         mainAxisAlignment:
-                        MainAxisAlignment.center,
+                        MainAxisAlignment
+                            .center,
 
                         children: [
 
                           Text(
-                            "Didn't get the code? ",
-                            style: AppTextStyles.medium(),
+
+                            "Didn't get code? ",
+
+                            style:
+                            AppTextStyles
+                                .medium(),
                           ),
 
                           GestureDetector(
 
-                            onTap: provider.seconds == 0
+                            onTap:
+                            provider.seconds ==
+                                0
+
                                 ? (){
-                              provider.resendOtp(
-                                  context);
+
+                              provider
+                                  .startTimer();
                             }
+
                                 : null,
 
                             child: Text(
 
-                              provider.seconds == 0
+                              provider.seconds ==
+                                  0
+
                                   ? "Resend"
+
                                   : "Resend in 0:${provider.seconds}",
 
                               style:
-                              AppTextStyles.semiBold(
+                              AppTextStyles
+                                  .semiBold(
+
                                 size: 14,
+
                                 color:
-                                AppColors.deepPrimary,
+                                AppColors
+                                    .primary,
                               ),
                             ),
                           ),

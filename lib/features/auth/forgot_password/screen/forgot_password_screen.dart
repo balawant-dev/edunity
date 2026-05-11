@@ -157,81 +157,224 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         SizedBox(height: 15.h),
 
                         /// EMAIL / PHONE
+                        // CustomTextField(
+                        //   controller:
+                        //   provider.emailPhoneController,
+                        //
+                        //   hintText: "email/phone",
+                        //
+                        //   labelText: "EMAIL/PHONE",
+                        //   validator: (value){
+                        //
+                        //     if(value == null || value.isEmpty){
+                        //       return "Please enter EMAIL/PHONE";
+                        //     }
+                        //
+                        //     if(value.length < 6){
+                        //       return "EMAIL/PHONE must be 6 characters";
+                        //     }
+                        //
+                        //     // if(!RegExp(
+                        //     //   r'^[^@]+@[^@]+\.[^@]+',
+                        //     // ).hasMatch(value)){
+                        //     //   return "Invalid email";
+                        //     // }
+                        //
+                        //     return null;
+                        //   },
+                        // ),
+                        /// EMAIL / PHONE
                         CustomTextField(
+
                           controller:
-                          provider.emailPhoneController,
+                          provider
+                              .emailPhoneController,
 
-                          hintText: "email/phone",
+                          hintText:
+                          "Enter Email / Mobile",
 
-                          labelText: "EMAIL/PHONE",
-                          validator: (value){
+                          labelText:
+                          "EMAIL / MOBILE",
 
-                            if(value == null || value.isEmpty){
-                              return "Please enter EMAIL/PHONE";
+                          validator:
+                              (value){
+
+                            if(value ==
+                                null ||
+                                value
+                                    .isEmpty){
+
+                              return
+                                "Please enter email or mobile";
                             }
 
-                            if(value.length < 6){
-                              return "EMAIL/PHONE must be 6 characters";
-                            }
+                            final emailRegex =
+                            RegExp(
 
-                            // if(!RegExp(
-                            //   r'^[^@]+@[^@]+\.[^@]+',
-                            // ).hasMatch(value)){
-                            //   return "Invalid email";
-                            // }
+                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                            );
+
+                            final phoneRegex =
+                            RegExp(
+                              r'^[0-9]{10}$',
+                            );
+
+                            if(!emailRegex
+                                .hasMatch(
+                                value) &&
+                                !phoneRegex
+                                    .hasMatch(
+                                    value)){
+
+                              return
+                                "Enter valid email or mobile";
+                            }
 
                             return null;
                           },
+
+                          suffixIcon:
+                          Icon(
+
+                            Icons
+                                .email_outlined,
+
+                            color:
+                            AppColors
+                                .grey,
+                          ),
                         ),
 
                         SizedBox(height: 15.h),
 
                         /// AADHAAR
+                        // CustomTextField(
+                        //   controller:
+                        //   provider.aadhaarController,
+                        //
+                        //   hintText: "1234 5678 9012",
+                        //
+                        //  labelText: "AADHAR NUMBER",
+                        //   maxLength: 12,
+                        //
+                        //   keyboardType: TextInputType.number,
+                        //   validator: (value){
+                        //
+                        //     if(value == null || value.isEmpty){
+                        //       return "Please enter aadhar number";
+                        //     }
+                        //
+                        //     if(value.length < 12){
+                        //       return "Aadhar number must be 12 characters";
+                        //     }
+                        //
+                        //     // if(!RegExp(
+                        //     //   r'^[^@]+@[^@]+\.[^@]+',
+                        //     // ).hasMatch(value)){
+                        //     //   return "Invalid email";
+                        //     // }
+                        //
+                        //     return null;
+                        //   },
+                        // ),
+
+                        /// AADHAR
                         CustomTextField(
+
                           controller:
-                          provider.aadhaarController,
+                          provider
+                              .aadhaarController,
 
-                          hintText: "1234 5678 9012",
+                          hintText:
+                          "123456789012",
 
-                         labelText: "AADHAR NUMBER",
+                          labelText:
+                          "AADHAR NUMBER",
+
+                          keyboardType:
+                          TextInputType
+                              .number,
+
                           maxLength: 12,
 
-                          keyboardType: TextInputType.number,
-                          validator: (value){
+                          validator:
+                              (value){
 
-                            if(value == null || value.isEmpty){
-                              return "Please enter aadhar number";
+                            if(value ==
+                                null ||
+                                value
+                                    .isEmpty){
+
+                              return
+                                "Please enter aadhar number";
                             }
 
-                            if(value.length < 12){
-                              return "Aadhar number must be 12 characters";
-                            }
+                            if(value
+                                .length !=
+                                12){
 
-                            // if(!RegExp(
-                            //   r'^[^@]+@[^@]+\.[^@]+',
-                            // ).hasMatch(value)){
-                            //   return "Invalid email";
-                            // }
+                              return
+                                "Aadhar number must be 12 digit";
+                            }
 
                             return null;
                           },
+
+                          suffixIcon:
+                          Icon(
+
+                            Icons
+                                .badge_outlined,
+
+                            color:
+                            AppColors
+                                .grey,
+                          ),
                         ),
 
                         SizedBox(height: 40.h),
 
                         /// BUTTON
+                        // CustomButton(
+                        //   text: "Send",
+                        //
+                        //   isLoading: provider.isLoading,
+                        //
+                        //   onTap: (){
+                        //     if (_formKey.currentState!.validate()) {
+                        //       provider.sendOtp(context);
+                        //     }
+                        //
+                        //   },
+                        // ),
+
                         CustomButton(
-                          text: "Send",
 
-                          isLoading: provider.isLoading,
+                          text:
+                          "Send OTP",
 
-                          onTap: (){
-                            if (_formKey.currentState!.validate()) {
-                              provider.sendOtp(context);
+                          isLoading:
+                          provider
+                              .isLoading,
+
+                          onTap: () async {
+
+                            FocusScope.of(
+                                context)
+                                .unfocus();
+
+                            if(_formKey
+                                .currentState!
+                                .validate()){
+
+                              await provider
+                                  .sendOtp(
+                                context,
+                              );
                             }
-
                           },
                         ),
+
                       ],
                     ),
                   ),

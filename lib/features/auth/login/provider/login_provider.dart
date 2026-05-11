@@ -26,12 +26,18 @@ class LoginProvider extends ChangeNotifier {
 
   final LoginRepository repository =
   LoginRepository();
-
+  bool obscureCurrent = true;
   bool isLoading = false;
 
   LoginModel? loginModel;
 
   CollegeModel? collegeData;
+
+  void toggleCurrent(){
+
+    obscureCurrent = !obscureCurrent;
+    notifyListeners();
+  }
 
   void setCollegeData(
       CollegeModel data){

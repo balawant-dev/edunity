@@ -58,8 +58,10 @@
 
 import 'package:flutter/material.dart';
 
+import '../../features/auth/change_password/screen/change_password_screen.dart';
 import '../../features/auth/college_code/model/college_code_model.dart';
 import '../../features/auth/college_code/screen/college_code_screen.dart';
+import '../../features/auth/forgot_password/model/forgot_password_model.dart';
 import '../../features/auth/forgot_password/screen/forgot_password_screen.dart';
 import '../../features/auth/login/screen/login_screen.dart';
 import '../../features/auth/otp/screen/otp_screen.dart';
@@ -92,12 +94,23 @@ class RouteGenerator {
 
       case AppRoutes.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
+      case AppRoutes.changePassword:
+        return MaterialPageRoute(builder: (_) => const ChangePasswordScreen());
 
       case AppRoutes.otp:
-        return MaterialPageRoute(builder: (_) => const OtpScreen());
+        final forgotData = settings.arguments as ForgotPasswordModel;
+
+        return MaterialPageRoute(
+          builder: (_) => OtpScreen(forgotData: forgotData),
+        );
 
       case AppRoutes.resetPassword:
-        return MaterialPageRoute(builder: (_) => const ResetPasswordScreen());
+        final data = settings.arguments as Map<String, dynamic>;
+
+        return MaterialPageRoute(
+          builder: (_) =>
+              ResetPasswordScreen(userId: data["user_id"], otp: data["otp"]),
+        );
 
       case AppRoutes.collegeCode:
         return MaterialPageRoute(builder: (_) => CollegeCodeScreen());

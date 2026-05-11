@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'core/routes/app_routes.dart';
 import 'core/routes/route_generator.dart';
 import 'core/services/navigation_service.dart';
+import 'features/auth/change_password/provider/change_password_provider.dart';
 import 'features/auth/college_code/provider/college_provider.dart';
 import 'features/auth/forgot_password/provider/forgot_password_provider.dart';
 
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => CollegeProvider()),
         ChangeNotifierProvider(create: (_) => LoginProvider()),
+        ChangeNotifierProvider(create: (_) => ChangePasswordProvider()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812),

@@ -1,6 +1,7 @@
 import 'package:edunity/core/constants/app_images.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../drawer/ui/custom_drawer.dart';
 import '../model/home_model.dart';
 import '../provider/home_provider.dart';
 
@@ -13,13 +14,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
 
     final vm = context.watch<HomeProvider>();
 
     return Scaffold(
+      key: _scaffoldKey, // 👈 YE ADD KARO
       backgroundColor: AppColors2.bgColor,
+      drawer: const CustomDrawer(),
       body: SafeArea(
         child: SingleChildScrollView(
 
@@ -29,7 +33,11 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              const CustomAppBar(),
+               GestureDetector(
+                 onTap: (){
+                   _scaffoldKey.currentState!.openDrawer();
+                 },
+                   child: CustomAppBar()),
 
               const SizedBox(height: 24),
 

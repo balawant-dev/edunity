@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/utils/app_toast.dart';
 
-import '../model/reset_password_model.dart';
-import '../repo/reset_password_repo.dart';
+import '../model/change_password_model.dart';
+import '../repo/change_password_repo.dart';
 // import '../repo/reset_password_repository.dart';
 
-class ResetPasswordProvider
+class ChangePasswordProvider
     extends ChangeNotifier {
     final TextEditingController currentPasswordController =
   TextEditingController();
@@ -21,9 +21,9 @@ class ResetPasswordProvider
   confirmPasswordController =
   TextEditingController();
 
-  final ResetPasswordRepository
+  final ChangePasswordRepository
   repository =
-  ResetPasswordRepository();
+  ChangePasswordRepository();
   bool obscureCurrent = true;
   bool obscureNew = true;
 
@@ -35,8 +35,8 @@ class ResetPasswordProvider
 
   String otp = "";
 
-  ResetPasswordModel?
-  resetPasswordModel;
+    ChangePasswordModel?
+  changePasswordModel;
   void toggleCurrent(){
 
     obscureCurrent = !obscureCurrent;
@@ -87,13 +87,13 @@ class ResetPasswordProvider
 
       notifyListeners();
 
-      resetPasswordModel =
+      changePasswordModel =
       await repository
           .resetPassword(
 
-        userId: userId,
+        currentPassword: currentPasswordController.text.trim(),
 
-        otp: otp,
+
 
         newPassword:
         newPasswordController.text
@@ -107,7 +107,7 @@ class ResetPasswordProvider
 
       AppToast.show(
 
-        resetPasswordModel?.message
+        changePasswordModel?.message
             ??
             "",
 
@@ -115,19 +115,20 @@ class ResetPasswordProvider
         Colors.green,
       );
 
-      if(context.mounted){
-
-        Navigator.pushNamedAndRemoveUntil(
-
-          context,
-
-          AppRoutes.collegeCode,
-
-              (route) => false,
-        );
-      }
+      // if(context.mounted){
+      //
+      //   Navigator.pushNamedAndRemoveUntil(
+      //
+      //     context,
+      //
+      //     AppRoutes.collegeCode,
+      //
+      //         (route) => false,
+      //   );
+      // }
 
     }catch(e){
+      print("Exception error");
       print(e.toString(),);
 
       AppToast.show(
