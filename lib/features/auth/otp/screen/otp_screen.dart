@@ -78,7 +78,7 @@ class OtpScreen extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 24.w),
 
                   child: Text(
-                    "Please enter the 4-digit code sent to\nstudent@user.com",
+                    "Please enter the 6-digit code sent to\nstudent@user.com",
                     textAlign: TextAlign.center,
 
                     style: AppTextStyles.regular(color: AppColors.white.withOpacity(0.7)),

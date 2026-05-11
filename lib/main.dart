@@ -5,14 +5,17 @@ import 'package:provider/provider.dart';
 
 import 'core/routes/app_routes.dart';
 import 'core/routes/route_generator.dart';
+import 'core/services/navigation_service.dart';
+import 'features/auth/college_code/provider/college_provider.dart';
 import 'features/auth/forgot_password/provider/forgot_password_provider.dart';
 
+import 'features/auth/login/provider/login_provider.dart';
 import 'features/auth/reset_password/provider/reset_password_provider.dart';
+import 'features/home/provider/home_provider.dart';
 import 'features/onboarding/provider/onboarding_provider.dart';
 
 import 'features/splash/provider/splash_provider.dart';
 //git code
-
 
 void main() {
   runApp(const MyApp());
@@ -23,37 +26,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return MultiProvider(
-
       providers: [
+        ChangeNotifierProvider(create: (_) => SplashProvider()),
 
-        ChangeNotifierProvider(
-          create: (_) => SplashProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => OnboardingProvider()),
+        ChangeNotifierProvider(create: (_) => ForgotPasswordProvider()),
 
-        ChangeNotifierProvider(
-          create: (_) => OnboardingProvider(),
-
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ForgotPasswordProvider(),
-        ),
-
-        ChangeNotifierProvider(
-          create: (_) => OtpProvider(),
-        ),  ChangeNotifierProvider(
-          create: (_) => ResetPasswordProvider(),
-        ),
-
+        ChangeNotifierProvider(create: (_) => OtpProvider()),
+        ChangeNotifierProvider(create: (_) => ResetPasswordProvider()),
+        ChangeNotifierProvider(create: (_) => HomeProvider()),
+        ChangeNotifierProvider(create: (_) => CollegeProvider()),
+        ChangeNotifierProvider(create: (_) => LoginProvider()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812),
 
         builder: (context, child) {
-
           return MaterialApp(
 
+            navigatorKey:
+            NavigationService.navigatorKey,
             debugShowCheckedModeBanner: false,
 
             initialRoute: AppRoutes.splash,
