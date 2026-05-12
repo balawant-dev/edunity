@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
+import 'core/network/internet_provider.dart';
+import 'core/network/network_wrapper.dart';
 import 'core/routes/app_routes.dart';
 import 'core/routes/route_generator.dart';
 import 'core/services/navigation_service.dart';
@@ -42,19 +44,25 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LoginProvider()),
         ChangeNotifierProvider(create: (_) => ChangePasswordProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => InternetProvider()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812),
 
         builder: (context, child) {
-          return MaterialApp(
+          return  MaterialApp(
+              navigatorKey: NavigationService.navigatorKey,
+              debugShowCheckedModeBanner: false,
+            
+              initialRoute: AppRoutes.splash,
+              onGenerateRoute: RouteGenerator.generateRoute,
+            builder: (context, child) {
 
-            navigatorKey:
-            NavigationService.navigatorKey,
-            debugShowCheckedModeBanner: false,
+              return NetworkWrapper(
+                child: child!,
+              );
+            },
 
-            initialRoute: AppRoutes.splash,
-            onGenerateRoute: RouteGenerator.generateRoute,
           );
         },
       ),

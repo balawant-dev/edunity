@@ -107,6 +107,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       icon: Icons.person_outline,
                       title: "My Profile",
                       onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.profile,
+                        );
 
 
                       },

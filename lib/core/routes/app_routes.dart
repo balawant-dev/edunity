@@ -15,4 +15,5 @@ class AppRoutes {
   static const String collegeCode = "/college-code";
 
   static const String home = "/home";
+  static const String profile = "/profile";
 }

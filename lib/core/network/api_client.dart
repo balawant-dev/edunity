@@ -56,16 +56,16 @@ class ApiClient {
       await NetworkInfo.isConnected();
 
       if(!isConnected){
-
-        NavigationService
-            .navigatorKey
-            .currentState
-            ?.push(
-          MaterialPageRoute(
-            builder: (_) =>
-            const NoInternetScreen(),
-          ),
-        );
+        //
+        // NavigationService
+        //     .navigatorKey
+        //     .currentState
+        //     ?.push(
+        //   MaterialPageRoute(
+        //     builder: (_) =>
+        //     const NoInternetScreen(),
+        //   ),
+        // );
 
         throw ApiException("No Internet");
       }

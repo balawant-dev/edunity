@@ -68,6 +68,7 @@ import '../../features/auth/otp/screen/otp_screen.dart';
 import '../../features/auth/reset_password/screen/reset_password_screen.dart';
 import '../../features/home/screen/home_screen.dart';
 import '../../features/onboarding/screen/onboarding_screen.dart';
+import '../../features/profile/screen/profile_screen.dart';
 import '../../features/splash/screen/splash_screen.dart';
 
 import 'app_routes.dart';
@@ -94,6 +95,8 @@ class RouteGenerator {
 
       case AppRoutes.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
+        case AppRoutes.profile:
+        return MaterialPageRoute(builder: (_) =>const  ProfileScreen());
       case AppRoutes.changePassword:
         return MaterialPageRoute(builder: (_) => const ChangePasswordScreen());
 
