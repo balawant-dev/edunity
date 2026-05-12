@@ -21,7 +21,7 @@ class SectionTitle extends StatelessWidget {
         Text(
           title,
           style:  TextStyle(
-            fontSize: 20.sp,
+            fontSize: 16.sp,
             fontWeight: FontWeight.w600,
             color: AppColors2.textDark,
           ),
@@ -31,9 +31,10 @@ class SectionTitle extends StatelessWidget {
 
         Text(
           buttonText,
-          style: const TextStyle(
+          style:  TextStyle(
             fontWeight: FontWeight.w600,
             color: AppColors2.blue,
+            fontSize: 12.sp
           ),
         ),
 

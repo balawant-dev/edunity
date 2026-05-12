@@ -21,4 +21,5 @@ class AppColors {
   static const Color background = Color(0xFFF7F7F7);
   static const Color red = Colors.red;
   static const Color green = Colors.green;
+  static const Color lightBlue = Color(0xffe8eefc);
 }

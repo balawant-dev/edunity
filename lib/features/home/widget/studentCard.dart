@@ -47,14 +47,36 @@ class StudentCard extends StatelessWidget {
           padding:  EdgeInsets.all(14.r),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18.r),
+            borderRadius: BorderRadius.circular(16.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(.04),
-                blurRadius: 10.r,
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 12.r,
+                offset: const Offset(0, 4),
               ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 4.r,
+                offset: const Offset(0, 2),
+              ),
+              // BoxShadow(
+              //   color: Colors.black.withOpacity(0.1),
+              //   blurRadius: 6,
+              //   spreadRadius: 1,
+              //   offset: const Offset(0, 3),
+              // ),
             ],
           ),
+          // decoration: BoxDecoration(
+          //   color: Colors.white,
+          //   borderRadius: BorderRadius.circular(18.r),
+          //   boxShadow: [
+          //     BoxShadow(
+          //       color: Colors.black.withOpacity(.04),
+          //       blurRadius: 10.r,
+          //     ),
+          //   ],
+          // ),
           child: Row(
             children: [
               // Purani accent line hata di hai kyunki piche wala container wahi kaam kar raha hai
