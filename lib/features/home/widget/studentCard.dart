@@ -1,5 +1,6 @@
 import 'package:edunity/core/constants/app_images.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../model/home_model.dart';
 class StudentCard extends StatelessWidget {
@@ -30,27 +31,27 @@ class StudentCard extends StatelessWidget {
     return Stack(
       children: [
         Container(
-          margin: EdgeInsets.only(left: 4),
-          height: 120,
-          width: 50,
+          margin: EdgeInsets.only(left: 4.w),
+          height: 120.h,
+          width: 50.w,
           decoration: BoxDecoration(
             color: AppColors2.primary,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
           ),
         ),
 
         // 2. Main White Card
         Container(
           height: 120,
-          margin: const EdgeInsets.only(left: 10),
-          padding: const EdgeInsets.all(14),
+          margin:  EdgeInsets.only(left: 10.w),
+          padding:  EdgeInsets.all(14.r),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(18.r),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(.04),
-                blurRadius: 10,
+                blurRadius: 10.r,
               ),
             ],
           ),
@@ -59,22 +60,22 @@ class StudentCard extends StatelessWidget {
               // Purani accent line hata di hai kyunki piche wala container wahi kaam kar raha hai
 
               ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
                 child: Image.network(
                   image,
-                  height: 80,
-                  width: 80,
+                  height: 80.h,
+                  width: 80.w,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
-                    return Image.asset(AppImages.logoNotFound, height: 80, width: 80, fit: BoxFit.cover);
+                    return Image.asset(AppImages.logoNotFound, height: 80.h, width: 80.w, fit: BoxFit.cover);
                   },
                 ),
               ),
 
               // --- Pehli Vertical Line ---
-              const SizedBox(width: 8),
-              Container(width: 1, height: 70, color: Colors.grey.shade200),
-              const SizedBox(width: 8),
+               SizedBox(width: 8.w),
+              Container(width: 1.w, height: 70.h, color: Colors.grey.shade200),
+               SizedBox(width: 8.w),
 
               Expanded(
                 child: Column(
@@ -83,19 +84,19 @@ class StudentCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style:  TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
                     ),
-                    const SizedBox(height: 4),
+                     SizedBox(height: 4.h),
                     Text(
                       "ID : $userId",
-                      style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors2.blue, fontSize: 12),
+                      style:  TextStyle(fontWeight: FontWeight.w600, color: AppColors2.blue, fontSize: 12.sp),
                     ),
-                    const SizedBox(height: 4),
+                     SizedBox(height: 4.h),
                     Row(
                       children: [
-                         Icon(Icons.school, size: 14, color: AppColors2.textGrey),
-                        const SizedBox(width: 4),
-                        Text("$course", style: const TextStyle(color: AppColors2.textGrey, fontSize: 11)),
+                         Icon(Icons.school, size: 14.sp, color: AppColors2.textGrey),
+                         SizedBox(width: 4.w),
+                        Text("$course", style:  TextStyle(color: AppColors2.textGrey, fontSize: 11.sp)),
                       ],
                     ),
                   ],

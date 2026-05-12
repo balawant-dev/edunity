@@ -1,6 +1,7 @@
 import 'package:edunity/core/constants/app_images.dart';
 import 'package:edunity/features/profile/provider/profile_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../../drawer/ui/custom_drawer.dart';
 import '../model/home_model.dart';
@@ -46,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
 
-          padding: const EdgeInsets.all(18),
+          padding:  EdgeInsets.all(18.r),
 
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
                        _scaffoldKey.currentState!.openDrawer();
                      },
                      child: Container(
-                       height: 55,
-                       width: 48,
+                       height: 55.h,
+                       width: 48.w,
                        decoration: BoxDecoration(
                            image: DecorationImage(image: AssetImage(AppImages.collegeLogo))
                        ),
@@ -70,22 +71,22 @@ class _HomeScreenState extends State<HomeScreen> {
                      ),
                    ),
 
-                   const SizedBox(width: 12),
+                    SizedBox(width: 12.w),
 
                    Container(
-                     padding: const EdgeInsets.symmetric(
-                       horizontal: 12,
-                       vertical: 10,
+                     padding:  EdgeInsets.symmetric(
+                       horizontal: 12.w,
+                       vertical: 10.h,
                      ),
                      decoration: BoxDecoration(
                        color: Colors.white,
                        borderRadius: BorderRadius.circular(6),
                      ),
-                     child: const Text(
+                     child:  Text(
                        "SNS Vidyapeeth",
                        style: TextStyle(
                          fontWeight: FontWeight.w600,
-                         fontSize: 18,
+                         fontSize: 18.sp,
                          color: AppColors2.textDark,
                        ),
                      ),
@@ -94,17 +95,17 @@ class _HomeScreenState extends State<HomeScreen> {
                    const Spacer(),
 
                    Container(
-                     padding: const EdgeInsets.all(12),
+                     padding:  EdgeInsets.all(12.r),
                      decoration: BoxDecoration(
                        color: Colors.white,
-                       borderRadius: BorderRadius.circular(12),
+                       borderRadius: BorderRadius.circular(12.r),
                      ),
                      child: const Icon(Icons.notifications_none),
                    ),
                  ],
                ),
 
-              const SizedBox(height: 24),
+               SizedBox(height: 24.h),
 
               StudentCard(
 
@@ -125,14 +126,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ?? "",
               ),
 
-              const SizedBox(height: 28),
+               SizedBox(height: 28.h),
 
               const SectionTitle(
                 title: "Today's Attendance",
                 buttonText: "View History",
               ),
 
-              const SizedBox(height: 18),
+               SizedBox(height: 18.h),
 
               Row(
                 children: vm.attendanceCards.map((e) {
@@ -148,14 +149,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 }).toList(),
               ),
 
-              const SizedBox(height: 28),
+               SizedBox(height: 28.h),
 
               const SectionTitle(
                 title: "To Do List",
                 buttonText: "View All",
               ),
 
-              const SizedBox(height: 18),
+               SizedBox(height: 18.h),
 
               const EmptyCard(
                 icon: Icons.event_note_outlined,
@@ -164,14 +165,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.purple,
               ),
 
-              const SizedBox(height: 28),
+               SizedBox(height: 28.h),
 
               const SectionTitle(
                 title: "Today's Schedule",
                 buttonText: "View Timetable",
               ),
 
-              const SizedBox(height: 18),
+               SizedBox(height: 18.h),
 
               const EmptyCard(
                 icon: Icons.calendar_month,
@@ -180,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.blue,
               ),
 
-              const SizedBox(height: 30),
+               SizedBox(height: 30.h),
             ],
           ),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class EmptyCard extends StatelessWidget {
 
@@ -18,11 +19,11 @@ class EmptyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 170,
+      height: 170.h,
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18.r),
       ),
 
       child: Column(
@@ -31,11 +32,11 @@ class EmptyCard extends StatelessWidget {
 
           Icon(
             icon,
-            size: 48,
+            size: 48.sp,
             color: color.withOpacity(.5),
           ),
 
-          const SizedBox(height: 12),
+           SizedBox(height: 12.h),
 
           Text(
             title,
@@ -44,7 +45,7 @@ class EmptyCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 6),
+           SizedBox(height: 6.h),
 
           Text(
             subtitle,

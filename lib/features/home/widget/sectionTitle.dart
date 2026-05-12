@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../model/home_model.dart';
 class SectionTitle extends StatelessWidget {
@@ -19,8 +20,8 @@ class SectionTitle extends StatelessWidget {
 
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 20,
+          style:  TextStyle(
+            fontSize: 20.sp,
             fontWeight: FontWeight.w600,
             color: AppColors2.textDark,
           ),
@@ -36,11 +37,11 @@ class SectionTitle extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(width: 4),
+         SizedBox(width: 4.w),
 
-        const Icon(
+         Icon(
           Icons.arrow_forward_ios,
-          size: 14,
+          size: 14.sp,
           color: AppColors2.blue,
         ),
       ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../model/home_model.dart';
 class QuickActionCard extends StatelessWidget {
@@ -14,14 +15,14 @@ class QuickActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(
-          vertical: 14,
-          horizontal: 8,
+        margin:  EdgeInsets.only(right: 8.w),
+        padding:  EdgeInsets.symmetric(
+          vertical: 14.h,
+          horizontal: 8.w,
         ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(14.r),
         ),
 
         child: Column(
@@ -32,17 +33,17 @@ class QuickActionCard extends StatelessWidget {
               color: model.color,
             ),
 
-            const SizedBox(height: 8),
+             SizedBox(height: 8.h),
 
             Text(
               model.title,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 11.sp,
                 color: Colors.grey.shade600,
               ),
             ),
 
-            const SizedBox(height: 6),
+             SizedBox(height: 6.h),
 
             Text(
               model.value,
@@ -52,13 +53,13 @@ class QuickActionCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 4),
+             SizedBox(height: 4.h),
 
             Text(
               model.status,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 10.sp,
                 color: Colors.grey.shade500,
               ),
             ),

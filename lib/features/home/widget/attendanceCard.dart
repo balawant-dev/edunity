@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../model/home_model.dart';
 class AttendanceCard extends StatelessWidget {
@@ -14,12 +15,12 @@ class AttendanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        height: 125,
-        padding: const EdgeInsets.all(10),
-        margin: const EdgeInsets.only(right: 8),
+        height: 125.h,
+        padding:  EdgeInsets.all(10.r),
+        margin:  EdgeInsets.only(right: 8.w),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(14.r),
         ),
 
         child: Column(
@@ -30,11 +31,11 @@ class AttendanceCard extends StatelessWidget {
               children: [
 
                 CircleAvatar(
-                  radius: 12,
+                  radius: 12.r,
                   backgroundColor: Colors.green.withOpacity(0.08),
                   child: Icon(
                     model.icon,
-                    size: 16,
+                    size: 16.sp,
                     color: model.color,
                   ),
                 ),
@@ -44,14 +45,14 @@ class AttendanceCard extends StatelessWidget {
                 Text(
                   model.title,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 11.sp,
                     color: Colors.grey.shade600,
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 10),
+             SizedBox(height: 10.h),
 
             Text(
               model.value,
@@ -61,20 +62,20 @@ class AttendanceCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 6),
+             SizedBox(height: 6.h),
 
             Text(
               model.subtitle,
-              style: const TextStyle(fontSize: 11),
+              style:  TextStyle(fontSize: 11.sp),
             ),
 
-            const SizedBox(height: 8),
+             SizedBox(height: 8.h),
 
             if(model.bottomText.isNotEmpty)
               Text(
                 model.bottomText,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 10.sp,
                   color: Colors.grey.shade500,
                 ),
               ),
