@@ -47,29 +47,19 @@ class LoginProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> selectDate(
-      BuildContext context) async {
-
-    DateTime? pickedDate =
-    await showDatePicker(
-
+  Future<void> selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
       context: context,
-
-      initialDate:
-      DateTime(2000),
-
-      firstDate:
-      DateTime(1950),
-
-      lastDate:
-      DateTime.now(),
+      initialDate: DateTime(2000),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
     );
 
-    if(pickedDate != null){
+    if (pickedDate != null) {
+      // UI ke liye: DD-MM-YYYY
+      String formattedUI = "${pickedDate.day.toString().padLeft(2, '0')}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.year}";
 
-      dobController.text =
-      "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
-
+      dobController.text = formattedUI;
       notifyListeners();
     }
   }
@@ -82,7 +72,8 @@ class LoginProvider extends ChangeNotifier {
       isLoading = true;
 
       notifyListeners();
-
+      List<String> parts = dobController.text.split('-');
+      String apiDob = "${parts[2]}-${parts[1]}-${parts[0]}"; // YYYY-MM-DD
       loginModel =
       await repository.login(
 
@@ -93,7 +84,7 @@ class LoginProvider extends ChangeNotifier {
         userIdController.text.trim(),
 
         dob:
-        dobController.text.trim(),
+        apiDob,
 
         password:
         passwordController.text.trim(),

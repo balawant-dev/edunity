@@ -212,30 +212,18 @@ class LoginScreen extends StatelessWidget {
                         SizedBox(height: 14.h),
 
                         CustomTextField(
-                          controller:
-                          provider
-                              .dobController,
-
-                          onTap: (){
-
-                            provider.selectDate(
-                                context);
+                          controller: provider.dobController,
+                          onTap: () => provider.selectDate(context),
+                          hintText: "DD-MM-YYYY", // Hint ko update kar dein
+                          labelText: "Date of Birth",
+                          readOnly: true, // Type karne se bachane ke liye
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Please select DOB";
+                            }
+                            return null;
                           },
-                          hintText:
-                          "YYYY-MM-DD",
-                          labelText: "Date of Birth",     validator: (value){
-
-                          if(value == null ||
-                              value.isEmpty){
-
-                            return
-                              "Please select DOB";
-                          }
-
-                          return null;
-                        },
-
-                          suffixIcon:             Image.asset(AppImages.calender,scale: 4,),
+                          suffixIcon: Image.asset(AppImages.calender, scale: 4),
                         ),
 
                         SizedBox(height: 14.h),

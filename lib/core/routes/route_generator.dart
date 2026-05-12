@@ -77,6 +77,7 @@ class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppRoutes.splash:
+        // return MaterialPageRoute(builder: (_) => const HomeScreen());
         return MaterialPageRoute(builder: (_) => const SplashScreen());
 
       case AppRoutes.onboarding:

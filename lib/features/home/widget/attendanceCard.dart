@@ -75,7 +75,7 @@ class AttendanceCard extends StatelessWidget {
               model.value,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: model.color,
+                color: model.color,fontSize: 14.sp
               ),
             ),
 

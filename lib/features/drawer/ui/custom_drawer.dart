@@ -1,5 +1,6 @@
 import 'package:edunity/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_images.dart';
@@ -26,6 +27,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
   Widget build(BuildContext context) {
     final profilePro = context.watch<ProfileProvider>();
     return  Drawer(
+      backgroundColor: AppColors.white,
       width: MediaQuery.of(context).size.width * 0.80,
       child: Column(
         children: [
@@ -33,7 +35,18 @@ class _CustomDrawerState extends State<CustomDrawer> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(top: 50, bottom: 24),
-            color: AppColors.primary,
+            // color: AppColors.primary,
+            clipBehavior: Clip.antiAlias,
+            decoration: ShapeDecoration(
+              gradient: LinearGradient(
+                begin: Alignment(0.00, 0.50),
+                end: Alignment(1.00, 0.50),
+                colors: [const Color(0xFF21285B), const Color(0xFF4C5DC0)],
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: GestureDetector(
               onTap: (){
                 // navPush(context: context, action: EditProfile());
@@ -46,21 +59,21 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         height: 110,
                         width: 110,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(100.r),
                           border: Border.all(
                             width: 3,
                             color: AppColors.white,
                           ),
                         ),
                       child:     ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(100.r),
                         child: Image.network(
                           profilePro.profileModel!.data.photo,
-                          height: 80,
-                          width: 80,
+                          height: 110.h,
+                          width: 110.w,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
-                            return Image.asset(AppImages.logoNotFound, height: 80, width: 80, fit: BoxFit.cover);
+                            return Image.asset(AppImages.logoNotFound, height: 110.h, width: 110.w, fit: BoxFit.cover);
                           },
                         ),
                       ),
@@ -87,7 +100,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     profilePro.profileModel?.data?.fieldMobile??     "+91 XXXXXXX",
                     style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 14,
+                      fontSize: 14.sp,
                     ),
                   ),
                 ],
@@ -99,7 +112,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding:  EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -118,7 +131,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
 
                     drawerItem(
-                      icon: Icons.currency_rupee,
+                      icon: Icons.lock_reset,
                       title: "Change Password",
                       onTap: () {
                         Navigator.pushNamed(
@@ -208,19 +221,19 @@ class _CustomDrawerState extends State<CustomDrawer> {
     return GestureDetector(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding:  EdgeInsets.symmetric(vertical: 14.h),
         child: Row(
           children: [
             Icon(
               icon,
-              size: 22,
+              size: 22.sp,
               color: iconColor,
             ),
-            const SizedBox(width: 18),
+             SizedBox(width: 18.w),
             Text(
               title,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 14.sp,
                 color: textColor,
                 fontWeight: FontWeight.w400,
               ),
@@ -235,33 +248,33 @@ class _CustomDrawerState extends State<CustomDrawer> {
       context: context,
       barrierDismissible: true,
       builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         elevation: 16,
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding:  EdgeInsets.all(20.r),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             color: Colors.white,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.logout, size: 50, color: Colors.redAccent),
-              const SizedBox(height: 16),
-              const Text(
+              Icon(Icons.logout, size: 50.sp, color: Colors.redAccent),
+               SizedBox(height: 16.h),
+               Text(
                 "Logout",
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 10),
-              const Text(
+               SizedBox(height: 10.h),
+               Text(
                 "Are you sure you want to logout?",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.black54),
+                style: TextStyle(fontSize: 16.sp, color: Colors.black54),
               ),
-              const SizedBox(height: 20),
+               SizedBox(height: 20.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -270,7 +283,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       backgroundColor: Colors.grey[300],
                       foregroundColor: Colors.black87,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8.r)),
                     ),
                     onPressed: () => Navigator.pop(context),
                     child: const Text("Cancel"),
@@ -279,7 +292,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8.r)),
                     ),
                     onPressed: () async {
                       Navigator.pop(context);

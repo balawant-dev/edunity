@@ -42,9 +42,10 @@ class _ProfileScreenState
         provider.profileModel?.data;
 
     return Scaffold(
+      backgroundColor: AppColors.white,
 
-      backgroundColor:
-      const Color(0xffF5F7FB),
+      // backgroundColor:
+      // const Color(0xffF5F7FB),
 
       appBar: const CustomAppBar(
 
@@ -83,24 +84,25 @@ title: "My Profile",
 
               padding:
               EdgeInsets.all(22.r),
-
               decoration: BoxDecoration(
-
                 color: Colors.white,
-
-                borderRadius:
-                BorderRadius.circular(
-                  22.r,
-                ),
-
+                borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
-
                   BoxShadow(
-                    color: Colors.black12,
+                    color: Colors.black.withOpacity(0.08),
                     blurRadius: 12.r,
+                    offset: const Offset(0, 4),
                   ),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 4.r,
+                    offset: const Offset(0, 2),
+                  ),
+
                 ],
               ),
+
+
 
               child: Column(
 
@@ -160,7 +162,7 @@ title: "My Profile",
 
                     style:
                     AppTextStyles.bold(
-                      size: 22,
+                      size: 20.sp,
                     ),
                   ),
 
@@ -186,7 +188,7 @@ title: "My Profile",
 
                       borderRadius:
                       BorderRadius.circular(
-                        30.r,
+                        20.r,
                       ),
                     ),
 
@@ -198,6 +200,7 @@ title: "My Profile",
                       AppTextStyles.medium(
                         color:
                         AppColors.primary,
+                        size: 14.sp
                       ),
                     ),
                   ),
@@ -240,20 +243,20 @@ title: "My Profile",
               EdgeInsets.all(20.r),
 
               decoration: BoxDecoration(
-
                 color: Colors.white,
-
-                borderRadius:
-                BorderRadius.circular(
-                  22.r,
-                ),
-
+                borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
-
                   BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10.r,
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 12.r,
+                    offset: const Offset(0, 4),
                   ),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 4.r,
+                    offset: const Offset(0, 2),
+                  ),
+
                 ],
               ),
 
@@ -336,7 +339,7 @@ title: "My Profile",
 
           style:
           AppTextStyles.bold(
-            size: 16,
+            size: 14.sp,
           ),
         ),
 
@@ -349,6 +352,7 @@ title: "My Profile",
           style:
           AppTextStyles.medium(
             color: Colors.grey,
+            size: 12.sp
           ),
         ),
       ],
@@ -426,6 +430,7 @@ title: "My Profile",
                     AppTextStyles.medium(
                       color:
                       Colors.grey,
+                      size: 12.sp
                     ),
                   ),
 
@@ -437,7 +442,7 @@ title: "My Profile",
 
                     style:
                     AppTextStyles.semiBold(
-                      size: 15,
+                      size: 14.sp,
                     ),
                   ),
                 ],
@@ -451,7 +456,7 @@ title: "My Profile",
 
             padding:
             EdgeInsets.symmetric(
-              vertical: 16.h,
+              vertical: 14.h,
             ),
 
             child: Divider(
