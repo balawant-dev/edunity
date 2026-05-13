@@ -1,89 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/text_styles.dart';
 import '../../../common/widgets/custom_appbar.dart';
 import '../provider/profile_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
-
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() =>
-      _ProfileScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState
-    extends State<ProfileScreen> {
-
+class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
-
     super.initState();
-
     Future.microtask(() {
-
-      context
-          .read<ProfileProvider>()
-          .getProfile();
+      context.read<ProfileProvider>().getProfile();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-
-    final provider =
-    context.watch<ProfileProvider>();
-
-    final profile =
-        provider.profileModel?.data;
+    final provider = context.watch<ProfileProvider>();
+    final profile = provider.profileModel?.data;
 
     return Scaffold(
-      backgroundColor: AppColors.white,
-
-      // backgroundColor:
-      // const Color(0xffF5F7FB),
-
-      appBar: const CustomAppBar(
-
-title: "My Profile",
-        // showLogo: true,
-),
-
+      backgroundColor:  Colors.white,
+      appBar: const CustomAppBar(title: "Profile"),
       body: provider.isLoading
-
-          ? const Center(
-        child:
-        CircularProgressIndicator(),
-      )
-
+          ? const Center(child: CircularProgressIndicator())
           : profile == null
-
-          ? const Center(
-        child: Text(
-          "Profile not found",
-        ),
-      )
-
+          ? const Center(child: Text("Profile not found"))
           : SingleChildScrollView(
-
-        padding:
-        EdgeInsets.all(18.r),
-
+        padding: EdgeInsets.all(16.r),
         child: Column(
-
           children: [
-
-            /// TOP CARD
+            // ==================== TOP PROFILE CARD ====================
             Container(
-
               width: double.infinity,
-
-              padding:
-              EdgeInsets.all(22.r),
+              padding: EdgeInsets.all(20.r),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.r),
@@ -98,135 +56,52 @@ title: "My Profile",
                     blurRadius: 4.r,
                     offset: const Offset(0, 2),
                   ),
-
+                  // BoxShadow(
+                  //   color: Colors.black.withOpacity(0.1),
+                  //   blurRadius: 6,
+                  //   spreadRadius: 1,
+                  //   offset: const Offset(0, 3),
+                  // ),
                 ],
               ),
-
-
-
-              child: Column(
-
+              child: Row(
                 children: [
-
-                  /// IMAGE
                   Container(
-
-                    height: 110.h,
-
-                    width: 110.w,
-
-                    decoration:
-                    BoxDecoration(
-
-                      shape:
-                      BoxShape.circle,
-
-                      border: Border.all(
-                        color:
-                        AppColors.primary,
-                        width: 3,
-                      ),
+                    height: 90.h,
+                    width: 90.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary, width: 3.5),
                     ),
-
-                    child: ClipRRect(
-
-                      borderRadius:
-                      BorderRadius.circular(
-                        999,
-                      ),
-
+                    child: ClipOval(
                       child: Image.network(
-
-                        profile.photo,
-
+                        profile.photo ?? '',
                         fit: BoxFit.cover,
-
-                        errorBuilder:
-                            (_,__,___){
-
-                          return const Icon(
-                            Icons.person,
-                            size: 60,
-                          );
-                        },
+                        errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50, color: Colors.grey),
                       ),
                     ),
                   ),
-
-                  SizedBox(height: 16.h),
-
-                  /// NAME
-                  Text(
-
-                    profile.fieldName,
-
-                    style:
-                    AppTextStyles.bold(
-                      size: 20.sp,
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profile.fieldName ?? "Ramesh Kumar Singh",
+                          style: AppTextStyles.semiBold(size: 18.sp),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          "ID: ${profile.userId ?? "BED-2024-0892"}",
+                          style: AppTextStyles.medium(size: 14.sp, color: Colors.grey),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          profile.course ?? "B.Ed (2 Year Programme)",
+                          style: AppTextStyles.semiBold(size: 15.sp, color: AppColors.primary),
+                        ),
+                      ],
                     ),
-                  ),
-
-                  SizedBox(height: 6.h),
-
-                  /// USER ID
-                  Container(
-
-                    padding:
-                    EdgeInsets.symmetric(
-
-                      horizontal: 14.w,
-
-                      vertical: 6.h,
-                    ),
-
-                    decoration:
-                    BoxDecoration(
-
-                      color:
-                      AppColors.primary
-                          .withOpacity(0.1),
-
-                      borderRadius:
-                      BorderRadius.circular(
-                        20.r,
-                      ),
-                    ),
-
-                    child: Text(
-
-                      "ID : ${profile.userId}",
-
-                      style:
-                      AppTextStyles.medium(
-                        color:
-                        AppColors.primary,
-                        size: 14.sp
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 18.h),
-
-                  Row(
-
-                    mainAxisAlignment:
-                    MainAxisAlignment
-                        .spaceEvenly,
-
-                    children: [
-
-                      profileItem(
-                        title: "Course",
-                        value:
-                        profile.course,
-                      ),
-
-                      profileItem(
-                        title: "Session",
-                        value:
-                        profile.session,
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -234,86 +109,59 @@ title: "My Profile",
 
             SizedBox(height: 20.h),
 
-            /// DETAILS CARD
-            Container(
+            // Academic Details
+            _buildSection(
+              title: "ACADEMIC DETAILS",
+              children: [
+                _buildDetailRow(Icons.school, "BOARD / UNIVERSITY REG NO.", "REG0892987"),
+                _buildDetailRow(Icons.book, "COURSE", profile.course ?? "B.Ed (2 Year Programme)"),
+                _buildDetailRow(Icons.calendar_today, "SESSION", "2024-2027"),
+                _buildDetailRow(Icons.calendar_month, "YEAR", "1 Year", isLast: true),
+              ],
+            ),
 
-              width: double.infinity,
+            SizedBox(height: 16.h),
 
-              padding:
-              EdgeInsets.all(20.r),
+            // Personal Details
+            _buildSection(
+              title: "PERSONAL DETAILS",
+              children: [
+                _buildDetailRow(Icons.calendar_today, "DATE OF BIRTH", "15-06-2003"),
+                _buildDetailRow(Icons.person, "FATHER NAME", "Ram Singh"),
+                _buildDetailRow(Icons.person_outline, "MOTHER NAME", "Sita Singh"),
+                _buildDetailRow(Icons.phone, "STUDENT MOBILE", "+92 9876543210"),
+                _buildDetailRow(Icons.email, "EMAIL ID", "ramesh.singh@university.edu"),
+                _buildDetailRow(Icons.bloodtype, "BLOOD GROUP", "B+ Positive"),
+                _buildDetailRow(Icons.location_on, "ADDRESS",
+                    "H-45, Green Valley Residency, New Delhi, 110024",
+                    isLast: true),
+              ],
+            ),
 
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 12.r,
-                    offset: const Offset(0, 4),
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 4.r,
-                    offset: const Offset(0, 2),
-                  ),
+            SizedBox(height: 16.h),
 
-                ],
-              ),
+            // Emergency Contact
+            _buildSection(
+              title: "EMERGENCY CONTACT",
+              children: [
+                _buildDetailRow(Icons.person, "NAME", "Ram Singh"),
+                _buildDetailRow(Icons.family_restroom, "RELATION", "Father"),
+                _buildDetailRow(Icons.phone, "CONTACT NUMBER", "+91 9876543210", isLast: true),
+              ],
+            ),
 
-              child: Column(
+            SizedBox(height: 16.h),
 
-                children: [
-
-                  profileTile(
-                    icon: Icons.email,
-                    title: "Email",
-                    value:
-                    profile.email,
-                  ),
-
-                  profileTile(
-                    icon: Icons.phone,
-                    title: "Mobile",
-                    value:
-                    profile.fieldMobile,
-                  ),
-
-                  profileTile(
-                    icon:
-                    Icons.calendar_month,
-                    title:
-                    "Date of Birth",
-                    value:
-                    profile.dob,
-                  ),
-
-                  profileTile(
-                    icon: Icons.person,
-                    title:
-                    "Father Name",
-                    value:
-                    profile.fatherName,
-                  ),
-
-                  profileTile(
-                    icon:
-                    Icons.credit_card,
-                    title:
-                    "Aadhar Number",
-                    value:
-                    profile.aadhar,
-                  ),
-
-                  profileTile(
-                    icon:
-                    Icons.location_on,
-                    title: "Address",
-                    value:
-                    profile.address,
-                    isLast: true,
-                  ),
-                ],
-              ),
+            // College Details
+            _buildSection(
+              title: "COLLEGE DETAILS",
+              children: [
+                _buildDetailRow(Icons.school, "COLLEGE NAME", "SNS Vidhyapeeth"),
+                _buildDetailRow(Icons.location_on, "ADDRESS",
+                    "Vill. Motihari, post: Motihari Dist. Est Champaran, Bihar-845401"),
+                _buildDetailRow(Icons.language, "WEBSITE", "www.snsvidhyapeeth.edu.in"),
+                _buildDetailRow(Icons.phone, "CONTACT NUMBER", "06252-222222", isLast: true),
+              ],
             ),
           ],
         ),
@@ -321,148 +169,85 @@ title: "My Profile",
     );
   }
 
-  Widget profileItem({
-
-    required String title,
-
-    required String value,
-
-  }){
-
-    return Column(
-
-      children: [
-
-        Text(
-
-          value,
-
-          style:
-          AppTextStyles.bold(
-            size: 14.sp,
+  // ==================== SECTION WIDGET ====================
+  Widget _buildSection({required String title, required List<Widget> children}) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(14.r),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12.r,
+            offset: const Offset(0, 4),
           ),
-        ),
-
-        SizedBox(height: 4.h),
-
-        Text(
-
-          title,
-
-          style:
-          AppTextStyles.medium(
-            color: Colors.grey,
-            size: 12.sp
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 4.r,
+            offset: const Offset(0, 2),
           ),
-        ),
-      ],
+          // BoxShadow(
+          //   color: Colors.black.withOpacity(0.1),
+          //   blurRadius: 6,
+          //   spreadRadius: 1,
+          //   offset: const Offset(0, 3),
+          // ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: AppTextStyles.semiBold(size: 15.sp, color: AppColors.primary),
+          ),
+          SizedBox(height: 14.h),
+          ...children,
+        ],
+      ),
     );
   }
 
-  Widget profileTile({
-
-    required IconData icon,
-
-    required String title,
-
-    required String value,
-
-    bool isLast = false,
-
-  }){
-
+  // ==================== DETAIL ROW WITH ICON + DIVIDER ====================
+  Widget _buildDetailRow(IconData icon, String title, String value, {bool isLast = false}) {
     return Column(
-
       children: [
-
         Row(
-
-          crossAxisAlignment:
-          CrossAxisAlignment.start,
-
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             Container(
-
-              padding:
-              EdgeInsets.all(10.r),
-
-              decoration:
-              BoxDecoration(
-
-                color:
-                AppColors.primary
-                    .withOpacity(0.1),
-
-                borderRadius:
-                BorderRadius.circular(
-                  12.r,
-                ),
+              padding: EdgeInsets.all(8.r),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10.r),
               ),
-
-              child: Icon(
-
-                icon,
-
-                color:
-                AppColors.primary,
-
-                size: 22.sp,
-              ),
+              child: Icon(icon, color: AppColors.primary, size: 22.sp),
             ),
-
             SizedBox(width: 14.w),
-
             Expanded(
-
               child: Column(
-
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
-
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Text(
-
                     title,
-
-                    style:
-                    AppTextStyles.medium(
-                      color:
-                      Colors.grey,
-                      size: 12.sp
-                    ),
+                    style: AppTextStyles.medium(size: 12.sp, color: Colors.grey),
                   ),
-
                   SizedBox(height: 4.h),
-
                   Text(
-
                     value,
-
-                    style:
-                    AppTextStyles.semiBold(
-                      size: 14.sp,
-                    ),
+                    style: AppTextStyles.medium(size: 14.sp),
                   ),
                 ],
               ),
             ),
           ],
         ),
-
-        if(!isLast)
+        if (!isLast)
           Padding(
-
-            padding:
-            EdgeInsets.symmetric(
-              vertical: 14.h,
-            ),
-
-            child: Divider(
-              color: Colors.grey
-                  .withOpacity(0.2),
-            ),
+            padding: EdgeInsets.only(left: 54.w, top: 12.h),
+            child: Divider(color: Colors.grey.withOpacity(0.25), thickness: 1),
           ),
       ],
     );

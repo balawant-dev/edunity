@@ -67,6 +67,7 @@ import '../../features/auth/forgot_password/screen/forgot_password_screen.dart';
 import '../../features/auth/login/screen/login_screen.dart';
 import '../../features/auth/otp/screen/otp_screen.dart';
 import '../../features/auth/reset_password/screen/reset_password_screen.dart';
+import '../../features/bottomBar/bottomBar.dart';
 import '../../features/home/screen/home_screen.dart';
 import '../../features/onboarding/screen/onboarding_screen.dart';
 import '../../features/profile/screen/profile_screen.dart';
@@ -121,7 +122,10 @@ class RouteGenerator {
       case AppRoutes.collegeCode:
         return MaterialPageRoute(builder: (_) => CollegeCodeScreen());
       case AppRoutes.home:
-        return MaterialPageRoute(builder: (_) => HomeScreen());
+        return MaterialPageRoute(builder: (_) => MainScreen(currentIndex: 0,));
+
+        // case AppRoutes.home:
+        // return MaterialPageRoute(builder: (_) => HomeScreen());
 
       default:
         return MaterialPageRoute(

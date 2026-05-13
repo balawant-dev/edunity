@@ -10,6 +10,14 @@ class AppImages {
   static const String userId = "lib/assets/icons/userId.png";
   static const String logoNotFound = "lib/assets/images/logoNotFound.png";
   static const String illustration = "lib/assets/images/Illustration.png";
+  static const String homeS = "lib/assets/icons/homeS.png";
+  static const String homeUs = "lib/assets/icons/homeUs.png";
+  static const String punchS = "lib/assets/icons/punchS.png";
+  static const String punchUn = "lib/assets/icons/punchUn.png";
+  static const String quikS = "lib/assets/icons/quikS.png";
+  static const String quikUn = "lib/assets/icons/quikUn.png";
+  static const String settingS = "lib/assets/icons/settingS.png";
+  static const String settingUn = "lib/assets/icons/settingUn.png";
 
   static const String ob1 = "lib/assets/images/onBg.png";
 

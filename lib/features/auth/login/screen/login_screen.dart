@@ -12,21 +12,26 @@ import '../../../../core/theme/text_styles.dart';
 import '../../college_code/model/college_code_model.dart';
 import '../provider/login_provider.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   final CollegeModel collegeModel;
 
   LoginScreen({super.key,  required this.collegeModel,});
 
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
 
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
+    // final provider = Provider.of<LoginProvider>(context, listen: false);
     final provider =
     context.watch<LoginProvider>();
 
     provider.setCollegeData(
-      collegeModel,
+      widget.collegeModel,
     );
 
     return Scaffold(
@@ -49,7 +54,7 @@ class LoginScreen extends StatelessWidget {
 
                   SizedBox(height: 60.h),
                   Image.network(
-                    collegeModel.data.logo,
+                    widget.collegeModel.data.logo,
                     height: 90.h,
                     errorBuilder: (context, error, stackTrace) {
                       return Image.asset(AppImages.logoNotFound, height: 100.h,);
@@ -84,7 +89,7 @@ class LoginScreen extends StatelessWidget {
 
 
 
-                    collegeModel.data.fullName,
+                    widget.collegeModel.data.fullName,
                     textAlign: TextAlign.center,
 
                     style: AppTextStyles.semiBold(
