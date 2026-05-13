@@ -16,4 +16,21 @@ class ApiEndpoints {
 
   static const String logout = "/api/edu-logout";
   static const String myProfile = "/api/my-profile";
+
+
+  /// FACE ATTENDANCE
+  static const String faceStatus =
+      "/api/face-status";
+
+  static const String registerFace =
+      "/api/register-face";
+
+  static const String todayAttendance =
+      "/api/today-attendance";
+
+  static const String employeePunch =
+      "/api/employee/punch";
+
+  static const String studentPunch =
+      "/api/student/punch";
 }

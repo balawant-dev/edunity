@@ -143,6 +143,19 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         );
 
                       },
+                    ),       drawerItem(
+                      icon: Icons.lock_reset,
+                      title: "Face Attendance",
+                      onTap: () {
+                        Navigator.pushNamed(
+
+                          context,
+
+                          AppRoutes.faceAttendance
+
+                        );
+
+                      },
                     ),
                     drawerItem(
                       icon: Icons.support_agent,

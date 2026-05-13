@@ -58,6 +58,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../features/attendance/screen/face_attendance_screen.dart';
 import '../../features/auth/change_password/screen/change_password_screen.dart';
 import '../../features/auth/college_code/model/college_code_model.dart';
 import '../../features/auth/college_code/screen/college_code_screen.dart';
@@ -99,7 +100,8 @@ class RouteGenerator {
         case AppRoutes.profile:
         return MaterialPageRoute(builder: (_) =>const  ProfileScreen());
       case AppRoutes.changePassword:
-        return MaterialPageRoute(builder: (_) => const ChangePasswordScreen());
+        return MaterialPageRoute(builder: (_) => const ChangePasswordScreen());     case AppRoutes.faceAttendance:
+        return MaterialPageRoute(builder: (_) => const FaceAttendanceScreen());
 
       case AppRoutes.otp:
         final forgotData = settings.arguments as ForgotPasswordModel;

@@ -1,54 +1,3 @@
-// import 'package:dio/dio.dart';
-//
-// import '../routes/app_routes.dart';
-// import '../services/local_storage_service.dart';
-// import '../services/navigation_service.dart';
-//
-// class DioInterceptor extends Interceptor {
-//
-//   @override
-//   void onRequest(
-//       RequestOptions options,
-//       RequestInterceptorHandler handler,
-//       ) async {
-//
-//     final token =
-//     await LocalStorageService.getToken();
-//
-//     if(token != null){
-//
-//       options.headers["Authorization"] =
-//       "Bearer $token";
-//     }
-//
-//     super.onRequest(options, handler);
-//   }
-//
-//   @override
-//   void onError(
-//       DioException err,
-//       ErrorInterceptorHandler handler,
-//       ) async {
-//
-//     /// TOKEN EXPIRED
-//     if(err.response?.statusCode == 401){
-//
-//       await LocalStorageService.clearSession();
-//
-//       NavigationService
-//           .navigatorKey
-//           .currentState
-//           ?.pushNamedAndRemoveUntil(
-//         AppRoutes.login,
-//             (route) => false,
-//       );
-//     }
-//
-//     super.onError(err, handler);
-//   }
-// }
-
-
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -68,35 +17,69 @@ class DioInterceptor extends Interceptor {
     final token =
     await LocalStorageService.getToken();
 
-    /// TOKEN ADD
-    if(token != null){
+    /// TOKEN
+    if (token != null) {
 
       options.headers["Authorization"] =
       "Bearer $token";
     }
 
-    /// API LOG START
+    /// LOG START
     print(
         "================ API REQUEST ================");
 
-    print("METHOD => ${options.method}");
-
-    print("URL => ${options.baseUrl}${options.path}");
-
-    print("TOKEN => $token");
-
-    print("HEADERS => ${options.headers}");
-
-    print("QUERY => ${options.queryParameters}");
+    print(
+        "METHOD => ${options.method}");
 
     print(
-      "BODY => ${jsonEncode(options.data)}",
-    );
+        "URL => ${options.baseUrl}${options.path}");
+
+    print(
+        "TOKEN => $token");
+
+    print(
+        "HEADERS => ${options.headers}");
+
+    print(
+        "QUERY => ${options.queryParameters}");
+
+    /// SAFE BODY LOG
+    if (options.data != null) {
+
+      /// MULTIPART
+      if (options.data is FormData) {
+
+        final formData =
+        options.data as FormData;
+
+        print(
+            "BODY => MULTIPART FORM DATA");
+
+        print(
+            "FIELDS => ${formData.fields}");
+
+        print(
+            "FILES COUNT => ${formData.files.length}");
+
+        for (var file in formData.files) {
+
+          print(
+              "FILE => ${file.key}");
+        }
+
+      } else {
+
+        /// NORMAL JSON
+        print(
+          "BODY => ${jsonEncode(options.data)}",
+        );
+      }
+    }
 
     print(
         "============================================");
 
-    super.onRequest(options, handler);
+    return handler.next(options);
   }
 
   @override
@@ -105,7 +88,6 @@ class DioInterceptor extends Interceptor {
       ResponseInterceptorHandler handler,
       ) {
 
-    /// RESPONSE LOG
     print(
         "================ API RESPONSE ================");
 
@@ -117,14 +99,23 @@ class DioInterceptor extends Interceptor {
       "STATUS CODE => ${response.statusCode}",
     );
 
-    print(
-      "RESPONSE => ${jsonEncode(response.data)}",
-    );
+    try {
+
+      print(
+        "RESPONSE => ${jsonEncode(response.data)}",
+      );
+
+    } catch (e) {
+
+      print(
+        "RESPONSE => ${response.data}",
+      );
+    }
 
     print(
         "==============================================");
 
-    super.onResponse(response, handler);
+    return handler.next(response);
   }
 
   @override
@@ -133,7 +124,6 @@ class DioInterceptor extends Interceptor {
       ErrorInterceptorHandler handler,
       ) async {
 
-    /// ERROR LOG
     print(
         "================ API ERROR =================");
 
@@ -157,7 +147,7 @@ class DioInterceptor extends Interceptor {
         "============================================");
 
     /// TOKEN EXPIRED
-    if(err.response?.statusCode == 401){
+    if (err.response?.statusCode == 401) {
 
       await LocalStorageService.clearSession();
 
@@ -165,11 +155,13 @@ class DioInterceptor extends Interceptor {
           .navigatorKey
           .currentState
           ?.pushNamedAndRemoveUntil(
+
         AppRoutes.login,
+
             (route) => false,
       );
     }
 
-    super.onError(err, handler);
+    return handler.next(err);
   }
 }

@@ -2,6 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Optional: Also add this to check if the user is connected to a network -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
         android:label="edunity"
