@@ -68,15 +68,18 @@ class AttendanceProvider extends ChangeNotifier {
 
       options: FaceDetectorOptions(
 
-        enableContours: true,
+        performanceMode:
+        FaceDetectorMode.fast,
 
-        enableClassification: true,
+        enableContours: false,
 
-        enableLandmarks: true,
+        enableClassification: false,
+
+        enableLandmarks: false,
 
         enableTracking: true,
 
-        performanceMode: FaceDetectorMode.accurate,
+        minFaceSize: 0.15,
       ),
     );
 
@@ -98,24 +101,36 @@ class AttendanceProvider extends ChangeNotifier {
     final frontCamera = cameras.firstWhere(
 
           (camera) =>
-      camera.lensDirection == CameraLensDirection.front,
+      camera.lensDirection ==
+          CameraLensDirection.front,
     );
 
     cameraController = CameraController(
 
       frontCamera,
 
-      ResolutionPreset.high,
+      /// HIGH se medium karo
+      ResolutionPreset.medium,
 
       enableAudio: false,
 
-      imageFormatGroup: ImageFormatGroup.jpeg,
+      imageFormatGroup:
+      ImageFormatGroup.yuv420,
     );
 
     await cameraController?.initialize();
 
+    /// FLASH OFF
+    await cameraController?.setFlashMode(
+      FlashMode.off,
+    );
+
     notifyListeners();
   }
+
+  /// ============================================================
+  /// PICK PRIMARY IMAGE FROM CAMERA
+  /// ============================================================
 
   /// ============================================================
   /// PICK PRIMARY IMAGE FROM CAMERA
@@ -125,21 +140,33 @@ class AttendanceProvider extends ChangeNotifier {
 
     try {
 
-      if (cameraController == null) return;
+      /// image_picker camera open karega
+      /// user manually click karega
 
-      final XFile file =
-      await cameraController!.takePicture();
+      final XFile? image = await picker.pickImage(
 
-      primaryImage = File(file.path);
+        source: ImageSource.camera,
 
-      notifyListeners();
+        imageQuality: 85,
+
+        preferredCameraDevice:
+        CameraDevice.front,
+      );
+
+      if (image != null) {
+
+        primaryImage = File(image.path);
+
+        notifyListeners();
+      }
 
     } catch (e) {
 
-      debugPrint("PRIMARY CAMERA ERROR : $e");
+      debugPrint(
+        "PRIMARY CAMERA ERROR : $e",
+      );
     }
   }
-
   /// ============================================================
   /// PICK PRIMARY IMAGE FROM GALLERY
   /// ============================================================
@@ -245,7 +272,7 @@ class AttendanceProvider extends ChangeNotifier {
 
     captureTimer = Timer.periodic(
 
-      const Duration(milliseconds: 1200),
+      const Duration(milliseconds: 450),
 
           (timer) async {
 
@@ -289,18 +316,35 @@ class AttendanceProvider extends ChangeNotifier {
       final XFile image =
       await cameraController!.takePicture();
 
-      File file = File(image.path);
+      final file = File(image.path);
 
       final inputImage =
       InputImage.fromFile(file);
 
       final faces =
-      await faceDetector.processImage(inputImage);
+      await faceDetector.processImage(
+        inputImage,
+      );
 
-      if (faces.length != 1) {
+      /// FACE CHECK
+      if (faces.isEmpty) {
+
+        instructionText =
+        "Face not detected";
+
+        isFaceValid = false;
+
+        notifyListeners();
+
+        return;
+      }
+
+      if (faces.length > 1) {
 
         instructionText =
         "Only one face allowed";
+
+        isFaceValid = false;
 
         notifyListeners();
 
@@ -309,66 +353,58 @@ class AttendanceProvider extends ChangeNotifier {
 
       final face = faces.first;
 
-      final leftEye =
-          face.leftEyeOpenProbability ?? 0;
-
-      final rightEye =
-          face.rightEyeOpenProbability ?? 0;
-
-      if (leftEye < 0.6 || rightEye < 0.6) {
-
-        instructionText =
-        "Open your eyes properly";
-
-        notifyListeners();
-
-        return;
-      }
-
-      final headX =
-          face.headEulerAngleX ?? 0;
-
-      final headY =
-          face.headEulerAngleY ?? 0;
-
-      if (headX.abs() > 15 ||
-          headY.abs() > 15) {
-
-        instructionText =
-        "Keep head straight";
-
-        notifyListeners();
-
-        return;
-      }
-
+      /// FACE SIZE
       final faceWidth =
           face.boundingBox.width;
 
-      if (faceWidth < 150) {
+      if (faceWidth < 80) {
 
         instructionText =
-        "Move closer to camera";
+        "Move closer";
+
+        isFaceValid = false;
 
         notifyListeners();
 
         return;
       }
 
+      /// HEAD ROTATION
+      final headY =
+          face.headEulerAngleY ?? 0;
+
+      if (headY.abs() > 10) {
+
+        instructionText =
+        "Keep face straight";
+
+        isFaceValid = false;
+
+        notifyListeners();
+
+        return;
+      }
+
+      /// SUCCESS
       instructionText =
-      "Face detected successfully";
+      "Face detected";
 
       isFaceValid = true;
 
       captureCount++;
 
-      croppedFaceImages.add(file);
+      /// ONLY STORE SOME IMAGES
+      if (captureCount % 2 == 0) {
+        croppedFaceImages.add(file);
+      }
 
       notifyListeners();
 
     } catch (e) {
 
-      debugPrint("FACE CAPTURE ERROR : $e");
+      debugPrint(
+        "FACE CAPTURE ERROR : $e",
+      );
     }
   }
 
@@ -407,18 +443,176 @@ class AttendanceProvider extends ChangeNotifier {
   /// ============================================================
   /// PUNCH IMAGE
   /// ============================================================
+  /// ============================================================
+  /// AUTO PUNCH FACE SCAN
+  /// ============================================================
 
-  Future<void> capturePunchImage() async {
+  Future<bool> capturePunchImage() async {
 
-    if (cameraController == null) return;
+    try {
 
-    final XFile image =
-    await cameraController!.takePicture();
+      if (cameraController == null ||
+          !cameraController!.value.isInitialized) {
+        return false;
+      }
 
-    punchImage = File(image.path);
+      isPunchLoading = true;
 
-    notifyListeners();
+      isFaceValid = false;
+
+      instructionText =
+      "Align your face properly";
+
+      notifyListeners();
+
+      int successCount = 0;
+
+      List<File> validImages = [];
+
+      while (successCount < 2) {
+
+        final XFile image =
+        await cameraController!.takePicture();
+
+        final file = File(image.path);
+
+        final inputImage =
+        InputImage.fromFile(file);
+
+        final faces =
+        await faceDetector.processImage(
+          inputImage,
+        );
+
+        /// NO FACE
+        if (faces.isEmpty) {
+
+          instructionText =
+          "Face not detected";
+
+          isFaceValid = false;
+
+          notifyListeners();
+
+          await Future.delayed(
+            const Duration(milliseconds: 300),
+          );
+
+          continue;
+        }
+
+        /// MULTIPLE FACE
+        if (faces.length > 1) {
+
+          instructionText =
+          "Only one face allowed";
+
+          isFaceValid = false;
+
+          notifyListeners();
+
+          await Future.delayed(
+            const Duration(milliseconds: 300),
+          );
+
+          continue;
+        }
+
+        final face = faces.first;
+
+        /// HEAD STRAIGHT CHECK
+
+        final headX =
+            face.headEulerAngleX ?? 0;
+
+        final headY =
+            face.headEulerAngleY ?? 0;
+
+        /// STRICT ANGLE
+
+        if (headX.abs() > 10 ||
+            headY.abs() > 10) {
+
+          instructionText =
+          "Keep face straight";
+
+          isFaceValid = false;
+
+          notifyListeners();
+
+          await Future.delayed(
+            const Duration(milliseconds: 300),
+          );
+
+          continue;
+        }
+
+        /// FACE SIZE CHECK
+
+        final faceWidth =
+            face.boundingBox.width;
+
+        if (faceWidth < 100) {
+
+          instructionText =
+          "Move closer to camera";
+
+          isFaceValid = false;
+
+          notifyListeners();
+
+          await Future.delayed(
+            const Duration(milliseconds: 300),
+          );
+
+          continue;
+        }
+
+        /// SUCCESS
+
+        instructionText =
+        "Face detected successfully";
+
+        isFaceValid = true;
+
+        validImages.add(file);
+
+        successCount++;
+
+        notifyListeners();
+
+        await Future.delayed(
+          const Duration(milliseconds: 250),
+        );
+      }
+
+      /// BEST IMAGE
+
+      punchImage = validImages.first;
+
+      instructionText =
+      "Face scan completed";
+
+      notifyListeners();
+
+      return true;
+
+    } catch (e) {
+
+      debugPrint(
+        "PUNCH SCAN ERROR : $e",
+      );
+
+      return false;
+
+    } finally {
+
+      isPunchLoading = false;
+
+      notifyListeners();
+    }
   }
+
 
   /// ============================================================
   /// PUNCH ATTENDANCE

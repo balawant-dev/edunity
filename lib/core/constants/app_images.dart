@@ -9,6 +9,7 @@ class AppImages {
   static const String password = "lib/assets/icons/password.png";
   static const String userId = "lib/assets/icons/userId.png";
   static const String logoNotFound = "lib/assets/images/logoNotFound.png";
+  static const String illustration = "lib/assets/images/Illustration.png";
 
   static const String ob1 = "lib/assets/images/onBg.png";
 
