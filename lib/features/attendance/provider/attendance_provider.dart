@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import '../model/face_registration_model.dart';
 import '../model/face_status_model.dart';
 import '../model/punch_response_model.dart';
 import '../model/today_attendance_model.dart';
@@ -25,6 +28,7 @@ class AttendanceProvider extends ChangeNotifier {
   bool isPunchLoading = false;
 
   FaceStatusModel? faceStatusModel;
+  FaceRegistrationModel? faceRegistrationModel;
 
   TodayAttendanceModel? todayAttendanceModel;
 
@@ -35,6 +39,132 @@ class AttendanceProvider extends ChangeNotifier {
   List<CameraDescription> cameras = [];
 
   late FaceDetector faceDetector;
+  ///Map section ka code hai
+  GoogleMapController? mapController;
+  StreamSubscription<Position>? positionStream;
+  LatLng? currentLatLng;
+
+  bool isInsideRadius = false;
+  double currentHeading = 0;
+  double distanceInMeter = 0;
+
+  Future<void> getCurrentLocation({
+    required double officeLat,
+    required double officeLng,
+    required double radius,
+  }) async {
+
+    try {
+
+      bool serviceEnabled =
+      await Geolocator.isLocationServiceEnabled();
+
+      if(!serviceEnabled){
+        return;
+      }
+
+      LocationPermission permission =
+      await Geolocator.checkPermission();
+
+      if(permission == LocationPermission.denied){
+
+        permission =
+        await Geolocator.requestPermission();
+      }
+
+      if(permission == LocationPermission.deniedForever){
+        return;
+      }
+
+      final position =
+      await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+        ),
+      );
+
+      currentLatLng = LatLng(
+        position.latitude,
+        position.longitude,
+      );
+
+      distanceInMeter =
+          Geolocator.distanceBetween(
+            officeLat,
+            officeLng,
+            position.latitude,
+            position.longitude,
+          );
+
+      isInsideRadius =
+          distanceInMeter <= radius;
+
+      notifyListeners();
+
+    } catch (e) {
+
+      debugPrint(e.toString());
+    }
+  }
+  void startLiveTracking({
+    required double officeLat,
+    required double officeLng,
+    required double radius,
+  }) {
+
+    Geolocator.getPositionStream(
+
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 2,
+      ),
+
+    ).listen((position) async {
+
+      currentLatLng = LatLng(
+        position.latitude,
+        position.longitude,
+      );
+
+      currentHeading = position.heading;
+
+      distanceInMeter =
+          Geolocator.distanceBetween(
+            officeLat,
+            officeLng,
+            position.latitude,
+            position.longitude,
+          );
+
+      isInsideRadius =
+          distanceInMeter <= radius;
+
+      /// AUTO CAMERA MOVE
+
+      if(mapController != null){
+
+        mapController!.animateCamera(
+
+          CameraUpdate.newCameraPosition(
+
+            CameraPosition(
+
+              target: currentLatLng!,
+
+              zoom: 18,
+
+              tilt: 45,
+
+              bearing: currentHeading,
+            ),
+          ),
+        );
+      }
+
+      notifyListeners();
+    });
+  }
+  ///Map section ka code hai End
 
   /// ============================================================
   /// PRIMARY IMAGE
@@ -394,9 +524,14 @@ class AttendanceProvider extends ChangeNotifier {
       captureCount++;
 
       /// ONLY STORE SOME IMAGES
-      if (captureCount % 2 == 0) {
-        croppedFaceImages.add(file);
-      }
+      // if (captureCount % 2 == 0) {
+      //   croppedFaceImages.add(file);
+      // }
+
+      croppedFaceImages.add(file);
+      debugPrint(
+        "TOTAL STORED IMAGES => ${croppedFaceImages.length}",
+      );
 
       notifyListeners();
 
@@ -420,7 +555,7 @@ class AttendanceProvider extends ChangeNotifier {
 
       notifyListeners();
 
-      faceStatusModel =
+      faceRegistrationModel =
       await repo.registerFace(
 
         primaryImages: [primaryImage!],
@@ -664,5 +799,17 @@ class AttendanceProvider extends ChangeNotifier {
     isPunchLoading = false;
 
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+
+    positionStream?.cancel();
+
+    cameraController?.dispose();
+
+    faceDetector.close();
+
+    super.dispose();
   }
 }

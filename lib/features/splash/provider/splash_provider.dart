@@ -1,62 +1,194 @@
-// /// =============================
-// /// 8. SPLASH PROVIDER
-// /// =============================
 //
-// import 'dart:async';
 //
+//
+// import 'package:edunity/features/token/repo/token_repo.dart';
 // import 'package:flutter/material.dart';
+//
+//
 //
 // import '../../../core/routes/app_routes.dart';
 //
 // import '../../../core/services/local_storage_service.dart';
 //
+//
 // class SplashProvider
 //     extends ChangeNotifier {
 //
+//   final TokenRepository repository =
+//   TokenRepository();
+//
 //   Future<void> initializeApp(
-//       BuildContext context) async {
+//       BuildContext context,
+//       ) async {
 //
 //     await Future.delayed(
-//       const Duration(seconds: 3),
+//       const Duration(seconds: 2),
 //     );
 //
-//     final token =
-//     await LocalStorageService
-//         .getToken();
+//     try{
 //
-//     bool isLoggedIn =
-//         token != null &&
-//             token.isNotEmpty;
+//       final token =
+//       await LocalStorageService
+//           .getToken();
+//       print("API Token>>>>>>>>>>>>   ${token}");
+//       /// NO TOKEN
+//       if(token == null){
 //
-//     if(context.mounted){
-//       print("Api token>>>>>>>>>   ${token}");
-//       print(token);
 //
-//       Navigator.pushReplacementNamed(
+//         if(context.mounted){
 //
-//         context,
+//           Navigator.pushReplacementNamed(
 //
-//         isLoggedIn
-//             ? AppRoutes.home
-//             : AppRoutes.onboarding,
+//             context,
+//
+//             AppRoutes.onboarding,
+//           );
+//         }
+//
+//         return;
+//       }
+//
+//       /// TOKEN CHECK
+//       final response =
+//       await repository.tokenCheck();
+//
+//       /// VALID TOKEN
+//       if(response["status"] == true){
+//
+//         if(context.mounted){
+//
+//           Navigator.pushReplacementNamed(
+//
+//             context,
+//
+//             AppRoutes.home,
+//           );
+//         }
+//
+//         return;
+//       }
+//
+//       /// TOKEN EXPIRED
+//       if(response["action"] ==
+//           "refresh_required"){
+//
+//         await _refreshToken(
+//           context,
+//         );
+//       }
+//
+//     }catch(e){
+//
+//       await LocalStorageService
+//           .clearSession();
+//
+//       if(context.mounted){
+//
+//         Navigator.pushReplacementNamed(
+//
+//           context,
+//
+//           AppRoutes.onboarding,
+//         );
+//       }
+//     }
+//   }
+//
+//   /// REFRESH TOKEN
+//   Future<void> _refreshToken(
+//       BuildContext context,
+//       ) async {
+//
+//     try{
+//
+//       final refreshToken =
+//       await LocalStorageService
+//           .getRefreshToken();
+//
+//       if(refreshToken == null){
+//
+//         await LocalStorageService
+//             .clearSession();
+//
+//         if(context.mounted){
+//
+//           Navigator.pushReplacementNamed(
+//
+//             context,
+//
+//             AppRoutes.onboarding,
+//           );
+//         }
+//
+//         return;
+//       }
+//
+//       final response =
+//       await repository
+//           .refreshToken(
+//
+//         refreshToken:
+//         refreshToken,
 //       );
+//
+//       if(response["status"] == true){
+//
+//         await LocalStorageService
+//             .saveToken(
+//
+//           response["access_token"],
+//         );
+//
+//         if(context.mounted){
+//
+//           Navigator.pushReplacementNamed(
+//
+//             context,
+//
+//             AppRoutes.home,
+//           );
+//         }
+//
+//       }else{
+//
+//         await LocalStorageService
+//             .clearSession();
+//
+//         if(context.mounted){
+//
+//           Navigator.pushReplacementNamed(
+//
+//             context,
+//
+//             AppRoutes.onboarding,
+//           );
+//         }
+//       }
+//
+//     }catch(e){
+//
+//       await LocalStorageService
+//           .clearSession();
+//
+//       if(context.mounted){
+//
+//         Navigator.pushReplacementNamed(
+//
+//           context,
+//
+//           AppRoutes.onboarding,
+//         );
+//       }
 //     }
 //   }
 // }
-
-
-import 'package:edunity/features/token/repo/token_repo.dart';
 import 'package:flutter/material.dart';
 
-
-
 import '../../../core/routes/app_routes.dart';
-
 import '../../../core/services/local_storage_service.dart';
+import '../../token/repo/token_repo.dart';
 
-
-class SplashProvider
-    extends ChangeNotifier {
+class SplashProvider extends ChangeNotifier {
 
   final TokenRepository repository =
   TokenRepository();
@@ -74,10 +206,22 @@ class SplashProvider
       final token =
       await LocalStorageService
           .getToken();
-      print("API Token>>>>>>>>>>>>   ${token}");
-      /// NO TOKEN
-      if(token == null){
 
+      final refreshToken =
+      await LocalStorageService
+          .getRefreshToken();
+
+      print(
+          "ACCESS TOKEN => $token");
+
+      print(
+          "REFRESH TOKEN => $refreshToken");
+
+      /// NO TOKEN
+      if(
+      token == null ||
+          refreshToken == null
+      ){
 
         if(context.mounted){
 
@@ -96,7 +240,10 @@ class SplashProvider
       final response =
       await repository.tokenCheck();
 
-      /// VALID TOKEN
+      print(
+          "TOKEN CHECK RESPONSE => $response");
+
+      /// TOKEN VALID
       if(response["status"] == true){
 
         if(context.mounted){
@@ -112,17 +259,67 @@ class SplashProvider
         return;
       }
 
-      /// TOKEN EXPIRED
-      if(response["action"] ==
-          "refresh_required"){
+      /// ACCESS TOKEN EXPIRED
+      if(
+      response["status"] == false &&
+          response["action"] ==
+              "refresh_required"
+      ){
 
-        await _refreshToken(
-          context,
+        final refreshResponse =
+        await repository.refreshToken(
+
+          refreshToken:
+          refreshToken,
         );
+
+        print(
+            "REFRESH RESPONSE => $refreshResponse");
+
+        /// REFRESH SUCCESS
+        if(refreshResponse["status"] == true){
+
+          /// SAVE NEW ACCESS TOKEN
+          await LocalStorageService
+              .saveToken(
+
+            refreshResponse["access_token"],
+          );
+
+          if(context.mounted){
+
+            Navigator.pushReplacementNamed(
+
+              context,
+
+              AppRoutes.home,
+            );
+          }
+
+          return;
+        }
+
+        /// REFRESH FAILED
+        else{
+
+          await LocalStorageService
+              .clearSession();
+
+          if(context.mounted){
+
+            Navigator.pushReplacementNamed(
+
+              context,
+
+              AppRoutes.onboarding,
+            );
+          }
+
+          return;
+        }
       }
 
-    }catch(e){
-
+      /// INVALID TOKEN
       await LocalStorageService
           .clearSession();
 
@@ -135,53 +332,21 @@ class SplashProvider
           AppRoutes.onboarding,
         );
       }
-    }
-  }
 
-  /// REFRESH TOKEN
-  Future<void> _refreshToken(
-      BuildContext context,
-      ) async {
+    }catch(e){
 
-    try{
-
-      final refreshToken =
-      await LocalStorageService
-          .getRefreshToken();
-
-      if(refreshToken == null){
-
-        await LocalStorageService
-            .clearSession();
-
-        if(context.mounted){
-
-          Navigator.pushReplacementNamed(
-
-            context,
-
-            AppRoutes.onboarding,
-          );
-        }
-
-        return;
-      }
-
-      final response =
-      await repository
-          .refreshToken(
-
-        refreshToken:
-        refreshToken,
+      debugPrint(
+        "SPLASH ERROR => $e",
       );
 
-      if(response["status"] == true){
+      /// INTERNET ERROR YA TEMP ERROR
+      /// SESSION CLEAR NAHI KARNA
 
-        await LocalStorageService
-            .saveToken(
+      final token =
+      await LocalStorageService
+          .getToken();
 
-          response["access_token"],
-        );
+      if(token != null){
 
         if(context.mounted){
 
@@ -195,9 +360,6 @@ class SplashProvider
 
       }else{
 
-        await LocalStorageService
-            .clearSession();
-
         if(context.mounted){
 
           Navigator.pushReplacementNamed(
@@ -207,21 +369,6 @@ class SplashProvider
             AppRoutes.onboarding,
           );
         }
-      }
-
-    }catch(e){
-
-      await LocalStorageService
-          .clearSession();
-
-      if(context.mounted){
-
-        Navigator.pushReplacementNamed(
-
-          context,
-
-          AppRoutes.onboarding,
-        );
       }
     }
   }

@@ -9,7 +9,7 @@ class CustomAppBar extends StatelessWidget
   final String title;
 
   final bool showLogo;
-
+  final bool showBack;
   final String? logo;
 
   final VoidCallback? onBack;
@@ -20,6 +20,7 @@ class CustomAppBar extends StatelessWidget
     this.showLogo = false,
     this.logo,
     this.onBack,
+    this.showBack = true,
   });
 
   @override
@@ -37,7 +38,8 @@ class CustomAppBar extends StatelessWidget
 
       toolbarHeight: 65.h,
 
-      leading: GestureDetector(
+      leading:showBack
+          ? GestureDetector(
 
         onTap: onBack ??
                 (){
@@ -69,7 +71,7 @@ class CustomAppBar extends StatelessWidget
             ),
           ),
         ),
-      ),
+      ):const SizedBox(width: 16),
 
       title: Row(
 

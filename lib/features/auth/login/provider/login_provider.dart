@@ -94,6 +94,10 @@ class LoginProvider extends ChangeNotifier {
       await LocalStorageService
           .saveToken(
         loginModel?.accessToken ?? "",
+      ); /// SAVE TOKEN
+      await LocalStorageService
+          .saveRefreshToken(
+        loginModel?.refreshToken ?? "",
       );
 
       AppToast.show(

@@ -68,6 +68,10 @@ import '../../features/auth/login/screen/login_screen.dart';
 import '../../features/auth/otp/screen/otp_screen.dart';
 import '../../features/auth/reset_password/screen/reset_password_screen.dart';
 import '../../features/bottomBar/bottomBar.dart';
+import '../../features/cms/screen/about_us_screen.dart';
+import '../../features/cms/screen/campus_connect_screen.dart';
+import '../../features/cms/screen/privacy_policy_screen.dart';
+import '../../features/cms/screen/terms_condition_screen.dart';
 import '../../features/home/screen/home_screen.dart';
 import '../../features/onboarding/screen/onboarding_screen.dart';
 import '../../features/profile/screen/profile_screen.dart';
@@ -98,11 +102,16 @@ class RouteGenerator {
 
       case AppRoutes.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
-        case AppRoutes.profile:
-        return MaterialPageRoute(builder: (_) =>const  ProfileScreen());
+      case AppRoutes.profile:
+        return MaterialPageRoute(
+          builder: (_) => const ProfileScreen(isBack: true),
+        );
       case AppRoutes.changePassword:
-        return MaterialPageRoute(builder: (_) => const ChangePasswordScreen());     case AppRoutes.faceAttendance:
-        return MaterialPageRoute(builder: (_) => const FaceAttendanceScreen());
+        return MaterialPageRoute(builder: (_) => const ChangePasswordScreen());
+      case AppRoutes.faceAttendance:
+        return MaterialPageRoute(
+          builder: (_) => const FaceAttendanceScreen(isBack: true),
+        );
 
       case AppRoutes.otp:
         final forgotData = settings.arguments as ForgotPasswordModel;
@@ -122,10 +131,22 @@ class RouteGenerator {
       case AppRoutes.collegeCode:
         return MaterialPageRoute(builder: (_) => CollegeCodeScreen());
       case AppRoutes.home:
-        return MaterialPageRoute(builder: (_) => MainScreen(currentIndex: 0,));
+        return MaterialPageRoute(builder: (_) => MainScreen(currentIndex: 0));
 
-        // case AppRoutes.home:
-        // return MaterialPageRoute(builder: (_) => HomeScreen());
+      case AppRoutes.privacyPolicy:
+        return MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen());
+
+      case AppRoutes.aboutUs:
+        return MaterialPageRoute(builder: (_) => const AboutUsScreen());
+
+      case AppRoutes.termsCondition:
+        return MaterialPageRoute(builder: (_) => const TermsConditionScreen());
+
+      case AppRoutes.campusConnect:
+        return MaterialPageRoute(builder: (_) => const CampusConnectScreen());
+
+      // case AppRoutes.home:
+      // return MaterialPageRoute(builder: (_) => HomeScreen());
 
       default:
         return MaterialPageRoute(

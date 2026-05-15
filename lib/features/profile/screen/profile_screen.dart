@@ -7,7 +7,8 @@ import '../../../common/widgets/custom_appbar.dart';
 import '../provider/profile_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final bool isBack;
+  const ProfileScreen({super.key,required this.isBack});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -28,8 +29,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profile = provider.profileModel?.data;
 
     return Scaffold(
-      backgroundColor:  Colors.white,
-      appBar: const CustomAppBar(title: "Profile"),
+      backgroundColor: Colors.white,
+      appBar:  CustomAppBar(title: "Profile",showBack: widget.isBack,),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : profile == null
@@ -51,17 +52,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     blurRadius: 12.r,
                     offset: const Offset(0, 4),
                   ),
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 4.r,
-                    offset: const Offset(0, 2),
-                  ),
-                  // BoxShadow(
-                  //   color: Colors.black.withOpacity(0.1),
-                  //   blurRadius: 6,
-                  //   spreadRadius: 1,
-                  //   offset: const Offset(0, 3),
-                  // ),
                 ],
               ),
               child: Row(
@@ -75,7 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: ClipOval(
                       child: Image.network(
-                        profile.photo ?? '',
+                        profile.photo,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50, color: Colors.grey),
                       ),
@@ -87,17 +77,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          profile.fieldName ?? "Ramesh Kumar Singh",
+                          profile.fieldName,
                           style: AppTextStyles.semiBold(size: 18.sp),
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          "ID: ${profile.userId ?? "BED-2024-0892"}",
+                          "ID: ${profile.userId}",
                           style: AppTextStyles.medium(size: 14.sp, color: Colors.grey),
                         ),
                         SizedBox(height: 8.h),
                         Text(
-                          profile.course ?? "B.Ed (2 Year Programme)",
+                          profile.designation.isNotEmpty ? profile.designation : profile.type.toUpperCase(),
                           style: AppTextStyles.semiBold(size: 15.sp, color: AppColors.primary),
                         ),
                       ],
@@ -109,14 +99,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             SizedBox(height: 20.h),
 
-            // Academic Details
+            // Employee/Academic Details
             _buildSection(
-              title: "ACADEMIC DETAILS",
+              title: "WORK DETAILS",
               children: [
-                _buildDetailRow(Icons.school, "BOARD / UNIVERSITY REG NO.", "REG0892987"),
-                _buildDetailRow(Icons.book, "COURSE", profile.course ?? "B.Ed (2 Year Programme)"),
-                _buildDetailRow(Icons.calendar_today, "SESSION", "2024-2027"),
-                _buildDetailRow(Icons.calendar_month, "YEAR", "1 Year", isLast: true),
+                _buildDetailRow(Icons.work, "DESIGNATION", profile.designation),
+                _buildDetailRow(Icons.business, "DEPARTMENT", profile.department),
+                _buildDetailRow(Icons.badge, "UID", profile.uid, isLast: true),
               ],
             ),
 
@@ -126,50 +115,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildSection(
               title: "PERSONAL DETAILS",
               children: [
-                _buildDetailRow(Icons.calendar_today, "DATE OF BIRTH", "15-06-2003"),
-                _buildDetailRow(Icons.person, "FATHER NAME", "Ram Singh"),
-                _buildDetailRow(Icons.person_outline, "MOTHER NAME", "Sita Singh"),
-                _buildDetailRow(Icons.phone, "STUDENT MOBILE", "+92 9876543210"),
-                _buildDetailRow(Icons.email, "EMAIL ID", "ramesh.singh@university.edu"),
-                _buildDetailRow(Icons.bloodtype, "BLOOD GROUP", "B+ Positive"),
-                _buildDetailRow(Icons.location_on, "ADDRESS",
-                    "H-45, Green Valley Residency, New Delhi, 110024",
-                    isLast: true),
+                _buildDetailRow(Icons.email, "EMAIL ID", profile.email),
+                _buildDetailRow(Icons.phone, "MOBILE", profile.fieldMobile),
+                _buildDetailRow(Icons.calendar_month, "DATE OF BIRTH", profile.dob),
+                _buildDetailRow(Icons.person, "FATHER NAME", profile.fatherName),
+                _buildDetailRow(Icons.credit_card, "AADHAAR NUMBER", "[Aadhaar Redacted]"),
+                _buildDetailRow(Icons.bloodtype, "BLOOD GROUP", profile.bloodGroup),
+                _buildDetailRow(Icons.location_on, "ADDRESS", profile.address, isLast: true),
               ],
             ),
 
             SizedBox(height: 16.h),
 
             // Emergency Contact
-            _buildSection(
-              title: "EMERGENCY CONTACT",
-              children: [
-                _buildDetailRow(Icons.person, "NAME", "Ram Singh"),
-                _buildDetailRow(Icons.family_restroom, "RELATION", "Father"),
-                _buildDetailRow(Icons.phone, "CONTACT NUMBER", "+91 9876543210", isLast: true),
-              ],
-            ),
+            if (profile.emergencyContact != null)
+              _buildSection(
+                title: "EMERGENCY CONTACT",
+                children: [
+                  _buildDetailRow(Icons.person, "NAME", profile.emergencyContact!.name),
+                  _buildDetailRow(Icons.family_restroom, "RELATION", profile.emergencyContact!.relation),
+                  _buildDetailRow(Icons.phone, "CONTACT", profile.emergencyContact!.contact, isLast: true),
+                ],
+              ),
 
             SizedBox(height: 16.h),
 
             // College Details
-            _buildSection(
-              title: "COLLEGE DETAILS",
-              children: [
-                _buildDetailRow(Icons.school, "COLLEGE NAME", "SNS Vidhyapeeth"),
-                _buildDetailRow(Icons.location_on, "ADDRESS",
-                    "Vill. Motihari, post: Motihari Dist. Est Champaran, Bihar-845401"),
-                _buildDetailRow(Icons.language, "WEBSITE", "www.snsvidhyapeeth.edu.in"),
-                _buildDetailRow(Icons.phone, "CONTACT NUMBER", "06252-222222", isLast: true),
-              ],
-            ),
+            if (profile.collegeDetails != null)
+              _buildSection(
+                title: "COLLEGE DETAILS",
+                children: [
+                  _buildDetailRow(Icons.school, "COLLEGE", profile.collegeDetails!.college),
+                  _buildDetailRow(Icons.language, "WEBSITE", profile.collegeDetails!.website),
+                  _buildDetailRow(Icons.call, "CONTACT NO", profile.collegeDetails!.contactNo),
+                  _buildDetailRow(Icons.location_city, "ADDRESS", profile.collegeDetails!.address, isLast: true),
+                ],
+              ),
           ],
         ),
       ),
     );
   }
 
-  // ==================== SECTION WIDGET ====================
+  // Same Section & DetailRow Widgets...
   Widget _buildSection({required String title, required List<Widget> children}) {
     return Container(
       width: double.infinity,
@@ -183,26 +171,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             blurRadius: 12.r,
             offset: const Offset(0, 4),
           ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 4.r,
-            offset: const Offset(0, 2),
-          ),
-          // BoxShadow(
-          //   color: Colors.black.withOpacity(0.1),
-          //   blurRadius: 6,
-          //   spreadRadius: 1,
-          //   offset: const Offset(0, 3),
-          // ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: AppTextStyles.semiBold(size: 15.sp, color: AppColors.primary),
-          ),
+          Text(title, style: AppTextStyles.semiBold(size: 15.sp, color: AppColors.primary)),
           SizedBox(height: 14.h),
           ...children,
         ],
@@ -210,7 +184,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ==================== DETAIL ROW WITH ICON + DIVIDER ====================
   Widget _buildDetailRow(IconData icon, String title, String value, {bool isLast = false}) {
     return Column(
       children: [
@@ -230,15 +203,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.medium(size: 12.sp, color: Colors.grey),
-                  ),
+                  Text(title, style: AppTextStyles.medium(size: 12.sp, color: Colors.grey)),
                   SizedBox(height: 4.h),
-                  Text(
-                    value,
-                    style: AppTextStyles.medium(size: 14.sp),
-                  ),
+                  Text(value.isEmpty ? "N/A" : value, style: AppTextStyles.medium(size: 14.sp)),
                 ],
               ),
             ),

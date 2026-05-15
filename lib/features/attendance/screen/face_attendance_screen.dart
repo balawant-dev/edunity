@@ -1938,7 +1938,8 @@ import '../widgets/pending_flow_widget.dart';
 import '../widgets/registration_flow_widget.dart';
 
 class FaceAttendanceScreen extends StatefulWidget {
-  const FaceAttendanceScreen({super.key});
+  final bool isBack;
+  const FaceAttendanceScreen({super.key,required this.isBack});
 
   @override
   State<FaceAttendanceScreen> createState() =>
@@ -1966,7 +1967,7 @@ class _FaceAttendanceScreenState
 
       backgroundColor: Colors.white,
 
-     appBar: CustomAppBar(title:  "Face Attendance"),
+     appBar: CustomAppBar(title:  "Face Attendance",showBack: widget.isBack,),
 
       body: Consumer<AttendanceProvider>(
 

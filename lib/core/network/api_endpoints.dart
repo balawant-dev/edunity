@@ -17,20 +17,19 @@ class ApiEndpoints {
   static const String logout = "/api/edu-logout";
   static const String myProfile = "/api/my-profile";
 
-
   /// FACE ATTENDANCE
-  static const String faceStatus =
-      "/api/face-status";
+  static const String faceStatus = "/api/face-status";
 
-  static const String registerFace =
-      "/api/register-face";
+  static const String registerFace = "/api/register-face";
 
-  static const String todayAttendance =
-      "/api/today-attendance";
+  static const String todayAttendance = "/api/today-attendance";
 
-  static const String employeePunch =
-      "/api/employee/punch";
+  static const String employeePunch = "/api/employee/punch";
 
-  static const String studentPunch =
-      "/api/student/punch";
+  static const String studentPunch = "/api/student/punch";
+  ///CMS Section URL
+  static const String privacyPolicy = "/api/privacy-policy";
+  static const String aboutUs = "/api/about-us";
+  static const String termsCondition = "/api/terms-condition";
+  static const String campusConnect = "/api/campus-connect";
 }

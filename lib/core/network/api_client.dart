@@ -22,13 +22,13 @@ class ApiClient {
         baseUrl: ApiEndpoints.baseUrl,
 
         connectTimeout:
-        const Duration(seconds: 30),
+        const Duration(seconds: 60),
 
         receiveTimeout:
-        const Duration(seconds: 30),
+        const Duration(seconds: 60),
 
         sendTimeout:
-        const Duration(seconds: 30),
+        const Duration(seconds: 60),
 
         headers: {
           "Accept": "application/json",
@@ -41,8 +41,10 @@ class ApiClient {
         },
       ),
     );
-
-    dio.interceptors.add(DioInterceptor());
+    dio.interceptors.add(
+      DioInterceptor(dio),
+    );
+    // dio.interceptors.add(DioInterceptor());
   }
 
   /// GET API

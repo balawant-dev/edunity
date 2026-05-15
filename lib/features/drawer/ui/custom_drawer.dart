@@ -143,44 +143,59 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         );
 
                       },
-                    ),       drawerItem(
-                      icon: Icons.lock_reset,
-                      title: "Face Attendance",
-                      onTap: () {
-                        Navigator.pushNamed(
-
-                          context,
-
-                          AppRoutes.faceAttendance
-
-                        );
-
-                      },
                     ),
+                    // drawerItem(
+                    //   icon: Icons.lock_reset,
+                    //   title: "Face Attendance",
+                    //   onTap: () {
+                    //     Navigator.pushNamed(
+                    //
+                    //       context,
+                    //
+                    //       AppRoutes.faceAttendance
+                    //
+                    //     );
+                    //
+                    //   },
+                    // ),
                     drawerItem(
                       icon: Icons.support_agent,
                       title: "Help & Support",
                       onTap: () {},
                     ),
+                    // About Us
                     drawerItem(
                       icon: Icons.info_outline,
                       title: "About us",
                       onTap: () {
-
+                        Navigator.pushNamed(context, AppRoutes.aboutUs);
                       },
                     ),
+
+// Privacy Policy
                     drawerItem(
                       icon: Icons.privacy_tip_outlined,
                       title: "Privacy Policy",
                       onTap: () {
-
+                        Navigator.pushNamed(context, AppRoutes.privacyPolicy);
                       },
                     ),
+
+// Terms & Conditions
                     drawerItem(
                       icon: Icons.description_outlined,
                       title: "Terms & Conditions",
                       onTap: () {
+                        Navigator.pushNamed(context, AppRoutes.termsCondition);
+                      },
+                    ),
 
+// Campus Connect (naya)
+                    drawerItem(
+                      icon: Icons.connect_without_contact,
+                      title: "Campus Connect",
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRoutes.campusConnect);
                       },
                     ),
                     // drawerItem(
