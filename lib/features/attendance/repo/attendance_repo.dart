@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
+import '../model/faceImagesModel.dart';
 import '../model/face_registration_model.dart';
 import '../model/face_status_model.dart';
 import '../model/punch_response_model.dart';
@@ -39,6 +40,18 @@ class AttendanceRepo {
     );
 
     return TodayAttendanceModel.fromJson(
+      response.data,
+    );
+  }  /// TODAY ATTENDANCE
+  Future<FaceImagesModel>
+  getFaceImages() async {
+
+    final response =
+    await apiClient.get(
+      ApiEndpoints.faceImages,
+    );
+
+    return FaceImagesModel.fromJson(
       response.data,
     );
   }

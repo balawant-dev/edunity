@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import '../model/faceImagesModel.dart';
 import '../model/face_registration_model.dart';
 import '../model/face_status_model.dart';
 import '../model/punch_response_model.dart';
@@ -28,6 +29,7 @@ class AttendanceProvider extends ChangeNotifier {
   bool isPunchLoading = false;
 
   FaceStatusModel? faceStatusModel;
+  FaceImagesModel? faceImagesModel;
   FaceRegistrationModel? faceRegistrationModel;
 
   TodayAttendanceModel? todayAttendanceModel;

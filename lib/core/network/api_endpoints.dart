@@ -1,5 +1,6 @@
 class ApiEndpoints {
-  static const String baseUrl = "https://evidyapeeth.co.in";
+  static const String baseUrl = "https://edunityerp.com";
+  // static const String baseUrl = "https://evidyapeeth.co.in";
 
   static const String findCollege = "/api/find-college";
   static const String login = "/api/edu-login";
@@ -23,6 +24,7 @@ class ApiEndpoints {
   static const String registerFace = "/api/register-face";
 
   static const String todayAttendance = "/api/today-attendance";
+  static const String faceImages = "/api/face-images";
 
   static const String employeePunch = "/api/employee/punch";
 

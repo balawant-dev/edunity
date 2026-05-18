@@ -68,16 +68,7 @@ class RegistrationFlowWidget extends StatelessWidget {
 
               );
 
-              // ScaffoldMessenger.of(context)
-              //     .showSnackBar(
-              //
-              //   const SnackBar(
-              //
-              //     content: Text(
-              //       "Please select primary image",
-              //     ),
-              //   ),
-              // );
+
 
               return;
             }
@@ -85,49 +76,7 @@ class RegistrationFlowWidget extends StatelessWidget {
             await provider.startAutoCapture();
           } ,),
 
-          // SizedBox(
-          //
-          //   width: double.infinity,
-          //   height: 55,
-          //
-          //   child: ElevatedButton(
-          //
-          //     onPressed: () async {
-          //
-          //       if (provider.primaryImage == null) {
-          //
-          //         ScaffoldMessenger.of(context)
-          //             .showSnackBar(
-          //
-          //           const SnackBar(
-          //
-          //             content: Text(
-          //               "Please select primary image",
-          //             ),
-          //           ),
-          //         );
-          //
-          //         return;
-          //       }
-          //
-          //       await provider.startAutoCapture();
-          //     },
-          //
-          //     child: provider.isCapturing
-          //
-          //         ? Text(
-          //       "Capturing ${provider.captureCount}/20",
-          //     )
-          //
-          //         : provider.isRegistering
-          //
-          //         ? const CircularProgressIndicator()
-          //
-          //         : const Text(
-          //       "Register Face",
-          //     ),
-          //   ),
-          // ),
+
         ],
       ),
     );

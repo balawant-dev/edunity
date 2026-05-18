@@ -166,8 +166,6 @@
 //   }
 // }
 
-
-
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -178,7 +176,6 @@ import '../services/local_storage_service.dart';
 import '../services/navigation_service.dart';
 
 class DioInterceptor extends Interceptor {
-
   final Dio dio;
 
   DioInterceptor(this.dio);
@@ -187,133 +184,121 @@ class DioInterceptor extends Interceptor {
 
   @override
   void onRequest(
-      RequestOptions options,
-      RequestInterceptorHandler handler,
-      ) async {
-
-    final token =
-    await LocalStorageService.getToken();
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final token = await LocalStorageService.getToken();
 
     /// ACCESS TOKEN ADD
-    if(token != null){
-
-      options.headers["Authorization"] =
-      "Bearer $token";
+    if (token != null) {
+      options.headers["Authorization"] = "Bearer $token";
     }
 
     /// LOG REQUEST
-    print(
-        "================ API REQUEST ================");
+    print("================ API REQUEST ================");
 
-    print(
-        "METHOD => ${options.method}");
+    print("METHOD => ${options.method}");
 
-    print(
-        "URL => ${options.baseUrl}${options.path}");
+    print("URL => ${options.baseUrl}${options.path}");
 
-    print(
-        "TOKEN => $token");
+    print("TOKEN => $token");
 
-    print(
-        "HEADERS => ${options.headers}");
+    print("HEADERS => ${options.headers}");
 
-    print(
-        "QUERY => ${options.queryParameters}");
+    print("QUERY => ${options.queryParameters}");
 
-    if(options.data != null){
-
-      try{
-
-        print(
-          "BODY => ${jsonEncode(options.data)}",
-        );
-
-      }catch(e){
-
+    if (options.data != null) {
+      try {
+        print("BODY => ${jsonEncode(options.data)}");
+      } catch (e) {
         print("BODY => ${options.data}");
       }
     }
 
-    print(
-        "============================================");
+    print("============================================");
 
     return handler.next(options);
   }
 
-
   @override
-  void onResponse(
-      Response response,
-      ResponseInterceptorHandler handler,
-      ) async {
-
-    print(
-        "================ API RESPONSE ================");
+  void onResponse(Response response, ResponseInterceptorHandler handler) async {
+    print("================ API RESPONSE ================");
 
     print(
       "URL => ${response.requestOptions.baseUrl}${response.requestOptions.path}",
     );
 
-    print(
-      "STATUS CODE => ${response.statusCode}",
-    );
+    print("STATUS CODE => ${response.statusCode}");
 
     try {
-
-      print(
-        "RESPONSE => ${jsonEncode(response.data)}",
-      );
-
+      print("RESPONSE => ${jsonEncode(response.data)}");
     } catch (e) {
-
-      print(
-        "RESPONSE => ${response.data}",
-      );
+      print("RESPONSE => ${response.data}");
     }
 
-    print(
-        "==============================================");
+    print("==============================================");
 
     /// TOKEN EXPIRED HANDLE FROM RESPONSE BODY
 
     final data = response.data;
 
+    final path = response.requestOptions.path;
+
+    /// 🔥 AUTH APIs
+    final isAuthApi =
+
+        path.contains("edu-login") ||
+
+            path.contains("refresh-token");
+
+    /// 🔥 TOKEN EXPIRED CHECK
     final isTokenExpired =
 
-        response.statusCode == 401 ||
+        !isAuthApi && (
 
-            (
-                data is Map &&
-                    data["status"] == false &&
-                    data["message"]
-                        .toString()
-                        .toLowerCase()
-                        .contains("expired token")
-            ) ||
+            response.statusCode == 401 ||
 
-            (
-                data is Map &&
-                    data["status"] == false &&
-                    data["message"]
-                        .toString()
-                        .toLowerCase()
-                        .contains("invalid or expired token")
-            );
+                (
+                    data is Map &&
+                        data["status"] == false &&
+                        data["message"]
+                            .toString()
+                            .toLowerCase()
+                            .contains("expired token")
+                ) ||
 
-    if(isTokenExpired && !isRefreshing){
+                (
+                    data is Map &&
+                        data["status"] == false &&
+                        data["message"]
+                            .toString()
+                            .toLowerCase()
+                            .contains("invalid or expired token")
+                )
+        );
 
+    // final isTokenExpired =
+    //     response.statusCode == 401 ||
+    //     (data is Map &&
+    //         data["status"] == false &&
+    //         data["message"].toString().toLowerCase().contains(
+    //           "expired token",
+    //         )) ||
+    //     (data is Map &&
+    //         data["status"] == false &&
+    //         data["message"].toString().toLowerCase().contains(
+    //           "invalid or expired token",
+    //         ));
+
+    if (isTokenExpired && !isRefreshing) {
       isRefreshing = true;
 
       try {
-
-        final refreshToken =
-        await LocalStorageService
-            .getRefreshToken();
+        final refreshToken = await LocalStorageService.getRefreshToken();
 
         /// NO REFRESH TOKEN
 
-        if(refreshToken == null){
-
+        if (refreshToken == null) {
           await _logout();
 
           return handler.next(response);
@@ -322,73 +307,48 @@ class DioInterceptor extends Interceptor {
         /// REFRESH API
 
         final refreshResponse = await dio.post(
-
           ApiEndpoints.refreshToken,
 
-          data: {
+          data: {"refresh_token": refreshToken},
 
-            "refresh_token": refreshToken,
-          },
-
-          options: Options(
-
-            headers: {
-
-              "Authorization": null,
-            },
-          ),
+          options: Options(headers: {"Authorization": null}),
         );
-        print( "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTREFRESH TOKEN RESPONSE => ${response.data}");
         print(
-            "REFRESH RESPONSE => ${refreshResponse.data}");
+          "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTREFRESH TOKEN RESPONSE => ${response.data}",
+        );
+        print("REFRESH RESPONSE => ${refreshResponse.data}");
 
         /// SUCCESS
 
-        if(refreshResponse.data["status"] == true){
+        if (refreshResponse.data["status"] == true) {
+          final newAccessToken = refreshResponse.data["access_token"];
+          print("New Access Token generated : ${newAccessToken}");
 
-          final newAccessToken =
-          refreshResponse.data["access_token"];
-          print("New Access Token genarte Hua: ${newAccessToken}");
           /// SAVE TOKEN
 
-          await LocalStorageService
-              .saveToken(
-            newAccessToken,
-          );
+          await LocalStorageService.saveToken(newAccessToken);
 
           /// RETRY OLD API
 
-          final requestOptions =
-              response.requestOptions;
+          final requestOptions = response.requestOptions;
 
-          requestOptions.headers["Authorization"] =
-          "Bearer $newAccessToken";
+          requestOptions.headers["Authorization"] = "Bearer $newAccessToken";
 
-          final retryResponse =
-          await dio.fetch(
-            requestOptions,
-          );
+          final retryResponse = await dio.fetch(requestOptions);
 
           isRefreshing = false;
 
-          return handler.resolve(
-            retryResponse,
-          );
+          return handler.resolve(retryResponse);
         }
-
         /// FAILED
-
         else {
-
           isRefreshing = false;
 
           await _logout();
 
           return handler.next(response);
         }
-
       } catch (e) {
-
         isRefreshing = false;
 
         await _logout();
@@ -402,18 +362,12 @@ class DioInterceptor extends Interceptor {
 
   /// LOGOUT
   Future<void> _logout() async {
+    await LocalStorageService.clearSession();
 
-    await LocalStorageService
-        .clearSession();
-
-    NavigationService
-        .navigatorKey
-        .currentState
-        ?.pushNamedAndRemoveUntil(
-
+    NavigationService.navigatorKey.currentState?.pushNamedAndRemoveUntil(
       AppRoutes.login,
 
-          (route) => false,
+      (route) => false,
     );
   }
 }
