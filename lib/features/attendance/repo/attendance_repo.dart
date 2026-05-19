@@ -8,6 +8,7 @@ import '../../../../core/network/api_endpoints.dart';
 import '../model/faceImagesModel.dart';
 import '../model/face_registration_model.dart';
 import '../model/face_status_model.dart';
+import '../model/new_face_match_model.dart';
 import '../model/punch_response_model.dart';
 import '../model/today_attendance_model.dart';
 
@@ -55,7 +56,75 @@ class AttendanceRepo {
       response.data,
     );
   }
+  ///%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  /// SUB DOMAIN CODE
+  Future<NewFaceMatchModel> newFaceMatchApi({
+    required File newImage,
+    required File oldImage,
+  }) async {
+    final dio = Dio();
 
+    try {
+      /// 🔥 FORM DATA BUILD
+      FormData formData = FormData.fromMap({
+        "image2": await MultipartFile.fromFile(
+          newImage.path,
+          filename: newImage.path.split('/').last,
+        ),
+        "image1": await MultipartFile.fromFile(
+          oldImage.path,
+          filename: oldImage.path.split('/').last,
+        ),
+      });
+
+      /// 🧾 PRINT REQUEST INFO
+      print("========== FACE MATCH REQUEST ==========");
+      print("URL: http://168.144.116.189:5001/match");
+
+      print("👉 newImage path: ${newImage.path}");
+      print("👉 oldImage path: ${oldImage.path}");
+
+      print("👉 Request Files:");
+      print("   newimage: ${newImage.path.split('/').last}");
+      print("   images: ${oldImage.path.split('/').last}");
+
+      print("========================================");
+
+      /// 🚀 API CALL
+      final response = await dio.post(
+        "http://168.144.116.189:5001/match",
+        data: formData,
+        options: Options(
+          contentType: "multipart/form-data",
+        ),
+      );
+
+      /// 📡 RESPONSE LOG
+      print("========== FACE MATCH RESPONSE ==========");
+      print("Status Code: ${response.statusCode}");
+      print("Response Data: ${response.data}");
+      print("========================================");
+
+      return NewFaceMatchModel.fromJson(response.data);
+    } on DioException catch (e) {
+      /// ❌ DIO ERROR LOG
+      print("========== FACE MATCH ERROR ==========");
+      print("Error Message: ${e.message}");
+      print("Status Code: ${e.response?.statusCode}");
+      print("Error Response: ${e.response?.data}");
+      print("=======================================");
+
+      rethrow;
+    } catch (e) {
+      /// ❌ UNKNOWN ERROR
+      print("========== UNKNOWN ERROR ==========");
+      print(e.toString());
+      print("===================================");
+
+      rethrow;
+    }
+  }
+  ///%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   /// REGISTER FACE
   /// REGISTER FACE
   Future<FaceRegistrationModel> registerFace({

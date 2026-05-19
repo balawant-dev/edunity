@@ -1,345 +1,4 @@
-// import 'package:flutter/material.dart';
-//
-// import '../../../common/widgets/custom_button.dart';
-// import '../../../core/constants/app_colors.dart';
-// import '../../../core/utils/app_toast.dart';
-// import '../provider/attendance_provider.dart';
-// import 'camera_preview_widget.dart';
-// import 'info_card_widget.dart';
-//
-// class ApprovedFlowWidget extends StatelessWidget {
-//
-//   final AttendanceProvider provider;
-//
-//   const ApprovedFlowWidget({
-//     super.key,
-//     required this.provider,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//
-//     final attendance =
-//         provider.todayAttendanceModel;
-//
-//     final summary =
-//         attendance?.attendanceSummary;
-//
-//     return Padding(
-//
-//       padding: const EdgeInsets.all(20),
-//
-//       child: Column(
-//
-//         children: [
-//
-//           /// VERIFIED CARD
-//
-//           Container(
-//
-//             width: double.infinity,
-//
-//             padding: const EdgeInsets.all(16),
-//
-//             decoration: BoxDecoration(
-//
-//               color: Colors.green.shade50,
-//
-//               borderRadius:
-//               BorderRadius.circular(20),
-//
-//               border: Border.all(
-//                 color: Colors.green,
-//               ),
-//             ),
-//
-//             child: const Row(
-//
-//               children: [
-//
-//                 Icon(
-//                   Icons.verified,
-//                   color: Colors.green,
-//                 ),
-//
-//                 SizedBox(width: 10),
-//
-//                 Expanded(
-//
-//                   child: Text(
-//
-//                     "Face verified successfully. You can mark attendance now.",
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//
-//           const SizedBox(height: 20),
-//
-//           /// CAMERA
-//
-//           Expanded(
-//
-//             child: CameraPreviewWidget(
-//               provider: provider,
-//               showProgress: false,
-//             ),
-//           ),
-//
-//           const SizedBox(height: 20),
-//
-//           /// INFO
-//
-//           InfoCardWidget(
-//             text: provider.instructionText,
-//           ),
-//
-//           const SizedBox(height: 20),
-//           CustomButton(
-//
-//             isLoading: provider.isPunchLoading,
-//
-//             text:
-//             (summary?.timeline == null ||
-//                 summary!.timeline.isEmpty)
-//
-//                 ? "Punch In"
-//
-//                 : (summary.timeline.last.type == "In"
-//
-//                 ? "Punch Out"
-//
-//                 : "Punch In"),
-//
-//               onTap: () async {
-//
-//                 print("Start Image scan1");
-//
-//                 final locations =
-//                     attendance
-//                         ?.assignment
-//                         ?.locations;
-//
-//                 /// SAFE CHECK
-//                 if(
-//                 locations == null ||
-//                     locations.isEmpty
-//                 ){
-//
-//                   AppToast.show(
-//                     "Location not found",
-//                   );
-//
-//                   return;
-//                 }
-//
-//                 final location =
-//                     locations.first;
-//
-//                 print("Start Image scan2");
-//
-//                 /// FACE CAPTURE
-//                 final success =
-//                 await provider.capturePunchImage();
-//
-//                 print("Start Image scan3");
-//
-//                 print(success);
-//
-//                 print("Start Image scan4");
-//
-//                 if(!success){
-//
-//                   AppToast.show(
-//                     "Face capture failed",
-//                   );
-//
-//                   return;
-//                 }
-//
-//                 print(
-//                     "################Punch Module Send data "
-//                         "locationId: ${location.locationId}, "
-//                         "lat: ${location.lat} "
-//                         "lng: ${location.lng} "
-//                         "radiusInMeter: ${location.radiusInMeter}"
-//                 );
-//                 /// LOCATION CHECK
-//                 await provider.getCurrentLocation(
-//                   officeLat: double.parse(location.lat),
-//                   officeLng: double.parse(location.lng),
-//                   radius: location.radiusInMeter.toDouble(),
-//                 );
-//
-//                 /// OUTSIDE RADIUS
-//                 if(!provider.isInsideRadius){
-//
-//                   AppToast.show(
-//                     "You are outside attendance area",
-//                   );
-//
-//                   return;
-//                 }
-//                 /// API HIT
-//                 await provider.punchAttendance(
-//
-//                   locationId:
-//                   location.locationId,
-//                 );
-//
-//                 if(context.mounted){
-//
-//                   AppToast.show(
-//
-//                     provider
-//                         .punchResponseModel
-//                         ?.message ??
-//
-//                         "Attendance Updated",
-//                   );
-//                 }
-//               }
-//           ),
-//
-//           /// BUTTON
-//           // CustomButton(onTap: () async {
-//           //
-//           //   final location =
-//           //       attendance
-//           //           ?.assignment
-//           //           ?.locations
-//           //           .first;
-//           //
-//           //   if (location == null) {
-//           //     return;
-//           //   }
-//           //
-//           //   /// ONLY ONE IMAGE
-//           //   await provider.capturePunchImage();
-//           //
-//           //   await provider.punchAttendance(
-//           //     locationId: location.locationId,
-//           //   );
-//           //
-//           //   if (context.mounted) {
-//           //     AppToast.show(
-//           //       provider
-//           //           .punchResponseModel
-//           //           ?.message ??
-//           //           "",
-//           //     );
-//           //
-//           //     // ScaffoldMessenger.of(context)
-//           //     //     .showSnackBar(
-//           //
-//           //       // SnackBar(
-//           //       //
-//           //       //   content: Text(
-//           //       //
-//           //       //     provider
-//           //       //         .punchResponseModel
-//           //       //         ?.message ??
-//           //       //         "",
-//           //       //   ),
-//           //       // ),
-//           //     // );
-//           //   }
-//           // },isLoading: provider.isPunchLoading,text:  (summary?.timeline == null ||
-//           //     summary!.timeline.isEmpty)
-//           //
-//           //     ? "Punch In"
-//           //
-//           //     : (summary.timeline.last.type ==
-//           //     "In"
-//           //
-//           //     ? "Punch Out"
-//           //
-//           //     : "Punch In"),),
-//
-//           // SizedBox(
-//           //
-//           //   width: double.infinity,
-//           //   height: 55,
-//           //
-//           //   child: ElevatedButton(
-//           //                                   style: ElevatedButton.styleFrom(
-//           //                       backgroundColor: AppColors.deepPrimary,
-//           //                       foregroundColor: AppColors.white,
-//           //                       shape: RoundedRectangleBorder(
-//           //                         borderRadius: BorderRadius.circular(16),
-//           //                       ),
-//           //                     ),
-//           //
-//           //     onPressed:
-//           //     provider.isPunchLoading
-//           //
-//           //         ? null
-//           //
-//           //         : () async {
-//           //
-//           //       final location =
-//           //           attendance
-//           //               ?.assignment
-//           //               ?.locations
-//           //               .first;
-//           //
-//           //       if (location == null) {
-//           //         return;
-//           //       }
-//           //
-//           //       /// ONLY ONE IMAGE
-//           //       await provider.capturePunchImage();
-//           //
-//           //       await provider.punchAttendance(
-//           //         locationId: location.locationId,
-//           //       );
-//           //
-//           //       if (context.mounted) {
-//           //
-//           //         ScaffoldMessenger.of(context)
-//           //             .showSnackBar(
-//           //
-//           //           SnackBar(
-//           //
-//           //             content: Text(
-//           //
-//           //               provider
-//           //                   .punchResponseModel
-//           //                   ?.message ??
-//           //                   "",
-//           //             ),
-//           //           ),
-//           //         );
-//           //       }
-//           //     },
-//           //
-//           //     child:
-//           //     provider.isPunchLoading
-//           //
-//           //         ? const CircularProgressIndicator()
-//           //
-//           //         : Text(
-//           //
-//           //       (summary?.timeline == null ||
-//           //           summary!.timeline.isEmpty)
-//           //
-//           //           ? "Punch In"
-//           //
-//           //           : (summary.timeline.last.type ==
-//           //           "In"
-//           //
-//           //           ? "Punch Out"
-//           //
-//           //           : "Punch In"),
-//           //     ),
-//           //   ),
-//           // ),
-//         ],
-//       ),
-//     );
-//   }
-// }
+
 
 import 'package:flutter/material.dart';
 
@@ -406,53 +65,7 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
 
       child: Column(
         children: [
-          // /// VERIFIED CARD
-          //
-          // Container(
-          //
-          //   width: double.infinity,
-          //
-          //   padding: const EdgeInsets.all(16),
-          //
-          //   decoration: BoxDecoration(
-          //
-          //     color: Colors.green.shade50,
-          //
-          //     borderRadius:
-          //     BorderRadius.circular(20),
-          //
-          //     border: Border.all(
-          //       color: Colors.green,
-          //     ),
-          //   ),
-          //
-          //   child: const Row(
-          //
-          //     children: [
-          //
-          //       Icon(
-          //         Icons.verified,
-          //         color: Colors.green,
-          //       ),
-          //
-          //       SizedBox(width: 10),
-          //
-          //       Expanded(
-          //
-          //         child: Text(
-          //
-          //           "Face verified successfully. You can mark attendance now.",
-          //
-          //           style: TextStyle(
-          //             fontWeight: FontWeight.w600,
-          //           ),
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
 
-          // const SizedBox(height: 20),
 
           /// LIVE CAMERA
           ///
@@ -546,93 +159,7 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
                         ),
                       ),
 
-                      // GestureDetector(
-                      //
-                      //   onTap: () {
-                      //
-                      //     final location =
-                      //         attendance
-                      //             ?.assignment
-                      //             ?.locations
-                      //             .last;
-                      //
-                      //     if(location == null){
-                      //       return;
-                      //     }
-                      //
-                      //     Navigator.push(
-                      //
-                      //       context,
-                      //
-                      //       MaterialPageRoute(
-                      //
-                      //         builder: (_) =>
-                      //             AttendanceMapScreen(
-                      //
-                      //               officeLat:
-                      //               double.parse(
-                      //                 location.lat,
-                      //               ),
-                      //
-                      //               officeLng:
-                      //               double.parse(
-                      //                 location.lng,
-                      //               ),
-                      //
-                      //               radius:
-                      //               location
-                      //                   .radiusInMeter
-                      //                   .toDouble(),
-                      //             ),
-                      //       ),
-                      //     );
-                      //   },
-                      //
-                      //   child: Container(
-                      //
-                      //     padding:
-                      //     const EdgeInsets.symmetric(
-                      //
-                      //       horizontal: 14,
-                      //       vertical: 10,
-                      //     ),
-                      //
-                      //     decoration: BoxDecoration(
-                      //
-                      //       color: AppColors.deepPrimary,
-                      //
-                      //       borderRadius:
-                      //       BorderRadius.circular(12),
-                      //     ),
-                      //
-                      //     child: const Row(
-                      //
-                      //       children: [
-                      //
-                      //         Icon(
-                      //           Icons.map,
-                      //           color: Colors.white,
-                      //           size: 18,
-                      //         ),
-                      //
-                      //         SizedBox(width: 6),
-                      //
-                      //         Text(
-                      //
-                      //           "View Map",
-                      //
-                      //           style: TextStyle(
-                      //
-                      //             color: Colors.white,
-                      //
-                      //             fontWeight:
-                      //             FontWeight.w600,
-                      //           ),
-                      //         ),
-                      //       ],
-                      //     ),
-                      //   ),
-                      // ),
+
                     ],
                   ),
                 ),
@@ -642,89 +169,159 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
           /// LOCATION STATUS CARD
           const SizedBox(height: 20),
 
-          /// PUNCH BUTTON
+          // Punch Button
           CustomButton(
             isLoading: widget.provider.isPunchLoading,
-
             text: (summary?.timeline == null || summary!.timeline.isEmpty)
                 ? "Punch In"
-                : (summary.timeline.last.type == "In"
-                      ? "Punch Out"
-                      : "Punch In"),
-
+                : (summary.timeline.last.type == "In" ? "Punch Out" : "Punch In"),
             onTap: () async {
-              print("Start Image scan1");
+              if (widget.provider.isPunchLoading) return;
 
               final locations = attendance?.assignment?.locations;
-
-              /// LOCATION CHECK
-
               if (locations == null || locations.isEmpty) {
                 AppToast.show("Location not found");
-
                 return;
               }
 
               final location = locations.last;
 
-              /// GET CURRENT LOCATION
-
+              // Refresh location
               await widget.provider.getCurrentLocation(
                 officeLat: double.parse(location.lat),
-
                 officeLng: double.parse(location.lng),
-
                 radius: location.radiusInMeter.toDouble(),
               );
 
-              /// OUTSIDE RADIUS
-
               if (!widget.provider.isInsideRadius) {
                 AppToast.show("You are outside attendance area");
-
                 return;
               }
 
-              print("Start Image scan2");
-
-              /// FACE CAPTURE
-
-              final success = await widget.provider.capturePunchImage();
-
-              print("Start Image scan3");
-
-              print(success);
-
-              print("Start Image scan4");
+              // === Main Flow ===
+              final success = await widget.provider.verifyFaceAndPunch();
 
               if (!success) {
-                AppToast.show("Face capture failed");
-
+                AppToast.show(widget.provider.instructionText);
                 return;
               }
 
-              print(
-                "################Punch Module Send data "
-                "locationId: ${location.locationId}, "
-                "lat: ${location.lat} "
-                "lng: ${location.lng} "
-                "radiusInMeter: ${location.radiusInMeter}",
-              );
+              // Face matched successfully → Now Punch
+              await widget.provider.punchAttendance(locationId: location.locationId);
 
-              /// API HIT
-
-              await widget.provider.punchAttendance(
-                locationId: location.locationId,
-              );
-
-              if (context.mounted) {
-                AppToast.show(
-                  widget.provider.punchResponseModel?.message ??
-                      "Attendance Updated",
-                );
-              }
+              // if (context.mounted) {
+              //   AppToast.show(
+              //     widget.provider.punchResponseModel?.message ?? "Attendance Updated Successfully",
+              //   );
+              // }
             },
           ),
+
+          /// PUNCH BUTTON
+          // CustomButton(
+          //   isLoading: widget.provider.isPunchLoading,
+          //
+          //   text: (summary?.timeline == null || summary!.timeline.isEmpty)
+          //       ? "Punch In"
+          //       : (summary.timeline.last.type == "In"
+          //             ? "Punch Out"
+          //             : "Punch In"),
+          //
+          //   onTap: () async {
+          //     print("Start Image scan1");
+          //
+          //     final locations = attendance?.assignment?.locations;
+          //
+          //     /// LOCATION CHECK
+          //
+          //     if (locations == null || locations.isEmpty) {
+          //       AppToast.show("Location not found");
+          //
+          //       return;
+          //     }
+          //
+          //     final location = locations.last;
+          //
+          //     /// GET CURRENT LOCATION
+          //
+          //     await widget.provider.getCurrentLocation(
+          //       officeLat: double.parse(location.lat),
+          //
+          //       officeLng: double.parse(location.lng),
+          //
+          //       radius: location.radiusInMeter.toDouble(),
+          //     );
+          //
+          //     /// OUTSIDE RADIUS
+          //
+          //     if (!widget.provider.isInsideRadius) {
+          //       AppToast.show("You are outside attendance area");
+          //
+          //       return;
+          //     }
+          //
+          //     print("Start Image scan2");
+          //
+          //     /// FACE VERIFY + CAPTURE
+          //
+          //     final success =
+          //     await widget.provider.verifyFaceAndPunch();
+          //
+          //     print("Start Image scan3");
+          //
+          //     print(success);
+          //
+          //     print("Start Image scan4");
+          //
+          //     if (!success) {
+          //
+          //       AppToast.show(
+          //         widget.provider.instructionText,
+          //       );
+          //
+          //       return;
+          //     }
+          //
+          //     /// FACE CAPTURE
+          //     //  final success =
+          //     // await widget.provider.verifyFaceAndPunch();
+          //
+          //     // final success = await widget.provider.capturePunchImage();
+          //
+          //     print("Start Image scan3");
+          //
+          //     print(success);
+          //
+          //     print("Start Image scan4");
+          //
+          //     if (!success) {
+          //       AppToast.show("Face capture failed");
+          //
+          //       return;
+          //     }
+          //
+          //     print(
+          //       "################Punch Module Send data "
+          //       "locationId: ${location.locationId}, "
+          //       "lat: ${location.lat} "
+          //       "lng: ${location.lng} "
+          //       "radiusInMeter: ${location.radiusInMeter}",
+          //     );
+          //
+          //     /// API HIT
+          //
+          //     await widget.provider.punchAttendance(
+          //       locationId: location.locationId,
+          //     );
+          //
+          //     if (context.mounted) {
+          //       AppToast.show(
+          //         widget.provider.punchResponseModel?.message ??
+          //             "Attendance Updated",
+          //       );
+          //     }
+          //   },
+          // ),
         ],
       ),
     );

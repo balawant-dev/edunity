@@ -1967,7 +1967,7 @@ class _FaceAttendanceScreenState
 
       backgroundColor: Colors.white,
 
-     appBar: CustomAppBar(title:  "Face Attendance",showBack: widget.isBack,),
+     appBar: CustomAppBar(title:  "Face Attendance",showBack: false,),
 
       body: Consumer<AttendanceProvider>(
 

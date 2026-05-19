@@ -222,46 +222,43 @@ class PrimaryImageWidget extends StatelessWidget {
               const SizedBox(height: 20),
 
               Row(
-
+mainAxisAlignment: MainAxisAlignment.center,
                 children: [
 
-                  Expanded(
+                  _buildOptionCard(
 
-                    child: _buildOptionCard(
+                    icon: Icons.camera_alt,
 
-                      icon: Icons.camera_alt,
+                    title: "Camera",
 
-                      title: "Camera",
+                    onTap: () async {
 
-                      onTap: () async {
+                      Navigator.pop(context);
 
-                        Navigator.pop(context);
-
-                        /// USER CLICK KAREGA TAB IMAGE OPEN HOGA
-                        await provider.capturePrimaryImage();
-                      },
-                    ),
+                      /// USER CLICK KAREGA TAB IMAGE OPEN HOGA
+                      await provider.capturePrimaryImage();
+                    },
                   ),
 
-                  const SizedBox(width: 16),
+                  // const SizedBox(width: 16),
 
-                  Expanded(
-
-                    child: _buildOptionCard(
-
-                      icon: Icons.photo,
-
-                      title: "Gallery",
-
-                      onTap: () async {
-
-                        Navigator.pop(context);
-
-                        await provider
-                            .pickPrimaryImageFromGallery();
-                      },
-                    ),
-                  ),
+                  // Expanded(
+                  //
+                  //   child: _buildOptionCard(
+                  //
+                  //     icon: Icons.photo,
+                  //
+                  //     title: "Gallery",
+                  //
+                  //     onTap: () async {
+                  //
+                  //       Navigator.pop(context);
+                  //
+                  //       await provider
+                  //           .pickPrimaryImageFromGallery();
+                  //     },
+                  //   ),
+                  // ),
                 ],
               ),
 
@@ -293,6 +290,8 @@ class PrimaryImageWidget extends StatelessWidget {
       onTap: onTap,
 
       child: Container(
+        height: 100,
+        width: 100,
 
         padding: const EdgeInsets.symmetric(
           vertical: 20,
