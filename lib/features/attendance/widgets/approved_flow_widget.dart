@@ -171,6 +171,24 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
 
           // Punch Button
           CustomButton(
+            gradientColors:
+            (summary?.timeline == null || summary!.timeline.isEmpty)
+                ? [
+              const Color(0xFF0128A1),
+              const Color(0xFF404DAB),
+            ]
+                : (summary.timeline.last.type == "In"
+                ? [
+              // const Color(0xFFFF8A80),
+              const Color(0xFFFF5252),
+              const Color(0xFFFF5252),
+            ]
+                : [
+              const Color(0xFF0128A1),
+              const Color(0xFF404DAB),
+            ]),
+
+
             isLoading: widget.provider.isPunchLoading,
             text: (summary?.timeline == null || summary!.timeline.isEmpty)
                 ? "Punch In"
