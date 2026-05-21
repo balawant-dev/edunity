@@ -71,7 +71,7 @@ class CameraPreviewWidget extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (provider.isFaceValid ? Colors.green : Colors.white)
+                    color: (provider.isFaceValid ? Colors.green : Colors.black.withOpacity(0.4))
                         .withOpacity(0.3),
                     blurRadius: 20,
                   ),

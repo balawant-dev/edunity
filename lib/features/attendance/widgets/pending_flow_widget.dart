@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_images.dart';
 import '../../../core/routes/app_routes.dart';
+import '../provider/attendance_provider.dart';
 
 class PendingFlowWidget extends StatelessWidget {
   const PendingFlowWidget({super.key});
@@ -52,10 +54,17 @@ class PendingFlowWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(30),
               ),
             ),
-            onPressed: () {
-              //ye same screen hi reload hoga ok
-              Navigator.pushReplacementNamed(context, AppRoutes.faceAttendance);
+            onPressed: () async {
+
+              final provider =
+              context.read<AttendanceProvider>();
+
+              await provider.getFaceStatus();
             },
+            // onPressed: () {
+            //   //ye same screen hi reload hoga ok
+            //   Navigator.pushReplacementNamed(context, AppRoutes.faceAttendance);
+            // },
             child: const Text("Refresh"),
           ),
         ],

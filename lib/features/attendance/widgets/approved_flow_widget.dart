@@ -1,16 +1,18 @@
 
 
+
 import 'package:flutter/material.dart';
 
 import '../../../common/widgets/custom_button.dart';
-import '../../../core/constants/app_colors.dart';
+
 import '../../../core/utils/app_toast.dart';
 import '../provider/attendance_provider.dart';
 
 import 'attendance_live_map_widget.dart';
-import 'attendance_map_widget.dart';
+
 import 'camera_preview_widget.dart';
 import 'info_card_widget.dart';
+import 'location_status_card.dart';
 
 class ApprovedFlowWidget extends StatefulWidget {
   final AttendanceProvider provider;
@@ -51,6 +53,8 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
          officeLng: officeLng,
          radius: radius,
        );
+       widget.provider.getFaceImages();
+       widget.provider.resetFaceScanner();
      });
    }
 
@@ -65,6 +69,8 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
 
       child: Column(
         children: [
+
+
 
 
           /// LIVE CAMERA
@@ -94,75 +100,15 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
           const SizedBox(height: 15),
 
           /// INFO CARD
-          widget.provider.isInsideRadius
-              ? InfoCardWidget(text: widget.provider.instructionText)
-              : Container(
-                  width: double.infinity,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: widget.provider.isInsideRadius
+                ? InfoCardWidget(text: widget.provider.instructionText):widget.provider.distanceInMeter==0?SizedBox():LocationStatusCard(
+              isInsideRadius: widget.provider.isInsideRadius,
+              distanceInMeter: widget.provider.distanceInMeter,
+            ),
 
-                  padding: const EdgeInsets.all(12),
-
-                  decoration: BoxDecoration(
-                    color: widget.provider.isInsideRadius
-                        ? Colors.green.shade50
-                        : Colors.red.shade50,
-
-                    borderRadius: BorderRadius.circular(18),
-
-                    border: Border.all(
-                      color: widget.provider.isInsideRadius
-                          ? Colors.green
-                          : Colors.red,
-                    ),
-                  ),
-
-                  child: Row(
-                    children: [
-                      Icon(
-                        widget.provider.isInsideRadius
-                            ? Icons.location_on
-                            : Icons.location_off,
-
-                        color: widget.provider.isInsideRadius
-                            ? Colors.green
-                            : Colors.red,
-                      ),
-
-                      const SizedBox(width: 12),
-
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-
-                          children: [
-                            Text(
-                              widget.provider.isInsideRadius
-                                  ? "Inside Attendance Area"
-                                  : "Outside Attendance Area",
-
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-
-                                color: widget.provider.isInsideRadius
-                                    ? Colors.green
-                                    : Colors.red,
-                              ),
-                            ),
-
-                            const SizedBox(height: 4),
-
-                            Text(
-                              "Distance : ${widget.provider.distanceInMeter.toStringAsFixed(2)} Meter",
-
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                          ],
-                        ),
-                      ),
-
-
-                    ],
-                  ),
-                ),
+          ),
 
           const SizedBox(height: 15),
 
@@ -170,7 +116,8 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
           const SizedBox(height: 20),
 
           // Punch Button
-          CustomButton(
+          widget.provider.isInsideRadius
+              ?    CustomButton(
             gradientColors:
             (summary?.timeline == null || summary!.timeline.isEmpty)
                 ? [
@@ -215,131 +162,28 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
                 AppToast.show("You are outside attendance area");
                 return;
               }
-
+              widget.provider.isProcessingFrame = false;
               // === Main Flow ===
-              final success = await widget.provider.verifyFaceAndPunch();
+              final success = await widget.provider.verifyFaceAndPunch(context);
 
               if (!success) {
                 AppToast.show(widget.provider.instructionText);
                 return;
               }
 
+
+              print("Kya success pop proper show ho rha ahi ki nhi >>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+
+
               // Face matched successfully → Now Punch
               await widget.provider.punchAttendance(locationId: location.locationId);
 
-              // if (context.mounted) {
-              //   AppToast.show(
-              //     widget.provider.punchResponseModel?.message ?? "Attendance Updated Successfully",
-              //   );
-              // }
-            },
-          ),
 
-          /// PUNCH BUTTON
-          // CustomButton(
-          //   isLoading: widget.provider.isPunchLoading,
-          //
-          //   text: (summary?.timeline == null || summary!.timeline.isEmpty)
-          //       ? "Punch In"
-          //       : (summary.timeline.last.type == "In"
-          //             ? "Punch Out"
-          //             : "Punch In"),
-          //
-          //   onTap: () async {
-          //     print("Start Image scan1");
-          //
-          //     final locations = attendance?.assignment?.locations;
-          //
-          //     /// LOCATION CHECK
-          //
-          //     if (locations == null || locations.isEmpty) {
-          //       AppToast.show("Location not found");
-          //
-          //       return;
-          //     }
-          //
-          //     final location = locations.last;
-          //
-          //     /// GET CURRENT LOCATION
-          //
-          //     await widget.provider.getCurrentLocation(
-          //       officeLat: double.parse(location.lat),
-          //
-          //       officeLng: double.parse(location.lng),
-          //
-          //       radius: location.radiusInMeter.toDouble(),
-          //     );
-          //
-          //     /// OUTSIDE RADIUS
-          //
-          //     if (!widget.provider.isInsideRadius) {
-          //       AppToast.show("You are outside attendance area");
-          //
-          //       return;
-          //     }
-          //
-          //     print("Start Image scan2");
-          //
-          //     /// FACE VERIFY + CAPTURE
-          //
-          //     final success =
-          //     await widget.provider.verifyFaceAndPunch();
-          //
-          //     print("Start Image scan3");
-          //
-          //     print(success);
-          //
-          //     print("Start Image scan4");
-          //
-          //     if (!success) {
-          //
-          //       AppToast.show(
-          //         widget.provider.instructionText,
-          //       );
-          //
-          //       return;
-          //     }
-          //
-          //     /// FACE CAPTURE
-          //     //  final success =
-          //     // await widget.provider.verifyFaceAndPunch();
-          //
-          //     // final success = await widget.provider.capturePunchImage();
-          //
-          //     print("Start Image scan3");
-          //
-          //     print(success);
-          //
-          //     print("Start Image scan4");
-          //
-          //     if (!success) {
-          //       AppToast.show("Face capture failed");
-          //
-          //       return;
-          //     }
-          //
-          //     print(
-          //       "################Punch Module Send data "
-          //       "locationId: ${location.locationId}, "
-          //       "lat: ${location.lat} "
-          //       "lng: ${location.lng} "
-          //       "radiusInMeter: ${location.radiusInMeter}",
-          //     );
-          //
-          //     /// API HIT
-          //
-          //     await widget.provider.punchAttendance(
-          //       locationId: location.locationId,
-          //     );
-          //
-          //     if (context.mounted) {
-          //       AppToast.show(
-          //         widget.provider.punchResponseModel?.message ??
-          //             "Attendance Updated",
-          //       );
-          //     }
-          //   },
-          // ),
+
+            },
+          ):SizedBox(),
+
+
         ],
       ),
     );

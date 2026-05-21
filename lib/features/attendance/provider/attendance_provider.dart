@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import '../../../core/routes/app_routes.dart';
 import '../model/faceImagesModel.dart';
 import '../model/face_registration_model.dart';
 import '../model/face_status_model.dart';
@@ -16,6 +18,8 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
+
+import '../widgets/success_attendance_dialog.dart';
 class AttendanceProvider extends ChangeNotifier {
 
   final AttendanceRepo repo = AttendanceRepo();
@@ -122,7 +126,7 @@ class AttendanceProvider extends ChangeNotifier {
 
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 2,
+        distanceFilter: 5,//2
       ),
 
     ).listen((position) async {
@@ -194,13 +198,84 @@ class AttendanceProvider extends ChangeNotifier {
 
   File? punchImage;
   int currentAngleIndex = 0;
+  // List<String> angleInstructions = [
+  //   "Look Straight",
+  //   "Slowly Turn Left",
+  //   "Slowly Turn Right",
+  //   "Slightly Look Up",
+  //   "Slightly Look Down",
+  // ];
+
   List<String> angleInstructions = [
     "Look Straight",
-    "Slowly Turn Left",
-    "Slowly Turn Right",
-    "Slightly Look Up",
-    "Slightly Look Down",
+    "Turn Face Left",
+    "Turn Face Right",
+    "Lift Chin Slightly Up",
+    "Lower Chin Slightly Down",
   ];
+
+  Future<void> startPunchFlow(BuildContext context, String locationId) async {
+    try {
+      isPunchLoading = true;
+      instructionText = "Starting face scan...";
+      notifyListeners();
+
+      // 1. fetch face
+      await getFaceImages();
+
+      if (faceImagesModel == null ||
+          faceImagesModel!.primaryImages == null ||
+          faceImagesModel!.primaryImages!.isEmpty) {
+        instructionText = "No registered face found";
+        return;
+      }
+
+      // 2. start capture immediately (NO UI WAIT)
+      final ok = await capturePunchImage();
+
+      if (!ok || punchImage == null) {
+        instructionText = "Face capture failed";
+        return;
+      }
+
+      instructionText = "Matching face...";
+      notifyListeners();
+
+      final oldImageUrl = faceImagesModel!.primaryImages!.first.url!;
+      final oldFile = await downloadImage(oldImageUrl);
+
+      final response = await repo.newFaceMatchApi(
+        oldImage: oldFile,
+        newImage: punchImage!,
+      );
+
+      if (response.status == true && response.match == true) {
+
+        // 🔥 SHOW DIALOG IMMEDIATELY
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => SuccessAttendanceDialog(
+              onHomePressed: () {
+                Navigator.pushReplacementNamed(context, AppRoutes.home);
+              },
+            ),
+          );
+        }
+
+        await punchAttendance(locationId: locationId);
+      } else {
+        instructionText = "Face not matched";
+      }
+
+    } catch (e) {
+      instructionText = "Error during punch";
+    } finally {
+      isPunchLoading = false;
+      notifyListeners();
+    }
+  }
 
   String getCurrentAngleInstruction() => angleInstructions[currentAngleIndex];
   /// ============================================================
@@ -275,7 +350,7 @@ class AttendanceProvider extends ChangeNotifier {
     notifyListeners();
 
     captureTimer?.cancel();
-    captureTimer = Timer.periodic(const Duration(milliseconds: 400), (timer) async {  // Faster
+    captureTimer = Timer.periodic(const Duration(milliseconds: 220), (timer) async {  // Faster
       if (captureCount >= 5) {
         timer.cancel();
         isCapturing = false;
@@ -374,7 +449,7 @@ class AttendanceProvider extends ChangeNotifier {
 
     try {
 
-      isLoading = true;
+      // isLoading = true;
 
       notifyListeners();
 
@@ -386,7 +461,7 @@ class AttendanceProvider extends ChangeNotifier {
       debugPrint("FACE STATUS ERROR : $e");
     }
 
-    isLoading = false;
+    // isLoading = false;
 
     notifyListeners();
   }
@@ -462,12 +537,20 @@ class AttendanceProvider extends ChangeNotifier {
         return;
       }
 
-      if (headX.abs() > 18) {
-        instructionText = "Keep your head straight (no tilt)";
+      // Allow head movement for Up/Down angles
+      if (currentAngleIndex <= 2 && headX.abs() > 18) {
+        instructionText = "Keep your head straight";
         isFaceValid = false;
         notifyListeners();
         return;
       }
+
+      // if (headX.abs() > 18) {
+      //   instructionText = "Keep your head straight (no tilt)";
+      //   isFaceValid = false;
+      //   notifyListeners();
+      //   return;
+      // }
 
       // === MIRROR FIX - Inverted Logic for Left/Right ===
       bool isGoodAngle = false;
@@ -482,11 +565,12 @@ class AttendanceProvider extends ChangeNotifier {
         case 2: // Slowly Turn Right
           isGoodAngle = headY < -13;
           break;
-        case 3: // Slightly Look Up
-          isGoodAngle = headX < -11;
+        case 3: // Up
+          isGoodAngle = headX < -7;
           break;
-        case 4: // Slightly Look Down
-          isGoodAngle = headX > 11;
+
+        case 4: // Down
+          isGoodAngle = headX > 7;
           break;
       }
 
@@ -538,6 +622,8 @@ class AttendanceProvider extends ChangeNotifier {
       );
 
       await getFaceStatus();
+      // ✅ RESET UI HERE
+      resetFaceScanner();
 
     } catch (e) {
 
@@ -559,82 +645,169 @@ class AttendanceProvider extends ChangeNotifier {
   /// ============================================================
   /// FAST PUNCH IMAGE CAPTURE (Single Good Image)
   /// ============================================================
-
   Future<bool> capturePunchImage() async {
     try {
-      if (cameraController == null || !cameraController!.value.isInitialized) {
+      if (cameraController == null ||
+          !cameraController!.value.isInitialized ||
+          isProcessingFrame) {
         return false;
       }
 
+      isProcessingFrame = true;
+
+      instructionText = "Scanning face...";
       isFaceValid = false;
-      instructionText = "Align your face properly";
       notifyListeners();
 
-      int attempts = 0;
-      const maxAttempts = 8; // Safety limit
+      // Small delay for camera stability
+      await Future.delayed(const Duration(milliseconds: 120));
 
-      while (attempts < maxAttempts) {
-        attempts++;
+      final XFile image = await cameraController!.takePicture();
 
-        final XFile image = await cameraController!.takePicture();
-        final file = File(image.path);
-        final inputImage = InputImage.fromFile(file);
+      final file = File(image.path);
 
-        final faces = await faceDetector.processImage(inputImage);
+      final inputImage = InputImage.fromFile(file);
 
-        if (faces.isEmpty) {
-          instructionText = "Face not detected";
-          isFaceValid = false;
-          notifyListeners();
-          await Future.delayed(const Duration(milliseconds: 150));
-          continue;
-        }
+      final faces = await faceDetector.processImage(inputImage);
 
-        if (faces.length > 1) {
-          instructionText = "Only one face allowed";
-          isFaceValid = false;
-          notifyListeners();
-          await Future.delayed(const Duration(milliseconds: 150));
-          continue;
-        }
-
-        final face = faces.first;
-        final headX = face.headEulerAngleX ?? 0;
-        final headY = face.headEulerAngleY ?? 0;
-        final faceWidth = face.boundingBox.width;
-
-        if (faceWidth < 100) {
-          instructionText = "Move closer to camera";
-          isFaceValid = false;
-          notifyListeners();
-          await Future.delayed(const Duration(milliseconds: 150));
-          continue;
-        }
-
-        if (headX.abs() > 12 || headY.abs() > 12) {
-          instructionText = "Keep face straight";
-          isFaceValid = false;
-          notifyListeners();
-          await Future.delayed(const Duration(milliseconds: 150));
-          continue;
-        }
-
-        // ✅ SUCCESS - One good image is enough
-        instructionText = "Face captured";
-        isFaceValid = true;
-        punchImage = file;
-
+      if (faces.isEmpty) {
+        instructionText = "Face not detected";
+        isFaceValid = false;
         notifyListeners();
-        return true;
+        isProcessingFrame = false;
+        return false;
       }
 
-      instructionText = "Failed to capture good face";
-      return false;
+      if (faces.length > 1) {
+        instructionText = "Only one face allowed";
+        isFaceValid = false;
+        notifyListeners();
+        isProcessingFrame = false;
+        return false;
+      }
+
+      final face = faces.first;
+
+      final headX = face.headEulerAngleX ?? 0;
+      final headY = face.headEulerAngleY ?? 0;
+
+      final faceWidth = face.boundingBox.width;
+
+      // Relax validation थोड़ा
+      if (faceWidth < 80) {
+        instructionText = "Move closer";
+        isFaceValid = false;
+        notifyListeners();
+        isProcessingFrame = false;
+        return false;
+      }
+
+      if (headX.abs() > 18 || headY.abs() > 18) {
+        instructionText = "Keep face straight";
+        isFaceValid = false;
+        notifyListeners();
+        isProcessingFrame = false;
+        return false;
+      }
+
+      // SUCCESS
+      punchImage = file;
+
+      isFaceValid = true;
+
+      instructionText = "Face detected";
+
+      notifyListeners();
+
+      isProcessingFrame = false;
+
+      return true;
+
     } catch (e) {
-      debugPrint("FAST PUNCH SCAN ERROR: $e");
+
+      debugPrint("PUNCH ERROR => $e");
+
+      isProcessingFrame = false;
+
       return false;
     }
   }
+
+  // Future<bool> capturePunchImage() async {
+  //   try {
+  //     if (cameraController == null || !cameraController!.value.isInitialized) {
+  //       return false;
+  //     }
+  //
+  //     isFaceValid = false;
+  //     instructionText = "Align your face properly";
+  //     notifyListeners();
+  //
+  //     int attempts = 0;
+  //     const maxAttempts = 8; // Safety limit
+  //
+  //     while (attempts < maxAttempts) {
+  //       attempts++;
+  //
+  //       final XFile image = await cameraController!.takePicture();
+  //       final file = File(image.path);
+  //       final inputImage = InputImage.fromFile(file);
+  //
+  //       final faces = await faceDetector.processImage(inputImage);
+  //
+  //       if (faces.isEmpty) {
+  //         instructionText = "Face not detected";
+  //         isFaceValid = false;
+  //         notifyListeners();
+  //         await Future.delayed(const Duration(milliseconds: 150));
+  //         continue;
+  //       }
+  //
+  //       if (faces.length > 1) {
+  //         instructionText = "Only one face allowed";
+  //         isFaceValid = false;
+  //         notifyListeners();
+  //         await Future.delayed(const Duration(milliseconds: 150));
+  //         continue;
+  //       }
+  //
+  //       final face = faces.first;
+  //       final headX = face.headEulerAngleX ?? 0;
+  //       final headY = face.headEulerAngleY ?? 0;
+  //       final faceWidth = face.boundingBox.width;
+  //
+  //       if (faceWidth < 100) {
+  //         instructionText = "Move closer to camera";
+  //         isFaceValid = false;
+  //         notifyListeners();
+  //         await Future.delayed(const Duration(milliseconds: 150));
+  //         continue;
+  //       }
+  //
+  //       if (headX.abs() > 12 || headY.abs() > 12) {
+  //         instructionText = "Keep face straight";
+  //         isFaceValid = false;
+  //         notifyListeners();
+  //         await Future.delayed(const Duration(milliseconds: 150));
+  //         continue;
+  //       }
+  //
+  //       // ✅ SUCCESS - One good image is enough
+  //       instructionText = "Face captured";
+  //       isFaceValid = true;
+  //       punchImage = file;
+  //
+  //       notifyListeners();
+  //       return true;
+  //     }
+  //
+  //     instructionText = "Failed to capture good face";
+  //     return false;
+  //   } catch (e) {
+  //     debugPrint("FAST PUNCH SCAN ERROR: $e");
+  //     return false;
+  //   }
+  // }
 
   // Future<bool> capturePunchImage() async {
   //
@@ -844,6 +1017,8 @@ class AttendanceProvider extends ChangeNotifier {
       }
 
       await getTodayAttendance();
+      // ✅ RESET UI HERE
+      resetFaceScanner();
 
     } catch (e) {
 
@@ -858,13 +1033,14 @@ class AttendanceProvider extends ChangeNotifier {
   /// VERIFY FACE & PUNCH (Optimized)
   /// ============================================================
 
-  Future<bool> verifyFaceAndPunch() async {
+  Future<bool> verifyFaceAndPunch(BuildContext context) async {
     try {
       isPunchLoading = true;
       instructionText = "Verifying face...";
+      // instructionText = "Verifying face...";
       notifyListeners();
 
-      await getFaceImages();
+      // await getFaceImages();
 
       if (faceImagesModel == null ||
           faceImagesModel!.primaryImages == null ||
@@ -894,8 +1070,33 @@ class AttendanceProvider extends ChangeNotifier {
         newImage: punchImage!,
       );
 
+
+
+
+
+
       if (response.status == true && (response.match ?? false)) {
         instructionText = "Face matched successfully";
+        notifyListeners();
+        // Show Success Dialog
+  // Make sure you pass context
+  //       WidgetsBinding.instance.addPostFrameCallback((_) {
+  //         if (context.mounted) {
+  //           showDialog(
+  //             context: context,
+  //             barrierDismissible: false,
+  //             builder: (context) => SuccessAttendanceDialog(
+  //               onHomePressed: () {
+  //                 Navigator.pushReplacementNamed(
+  //                   context,
+  //                   AppRoutes.home,
+  //                 );
+  //               },
+  //             ),
+  //           );
+  //         }
+  //       });
+
         return true;
       } else {
         instructionText = "Face not matched";
@@ -973,16 +1174,40 @@ class AttendanceProvider extends ChangeNotifier {
   //   }
   // }
   Future<File> downloadImage(String url) async {
+    try {
+      final dio = Dio();
 
-    final dio = Dio();
+      // temp directory
+      final dir = await getTemporaryDirectory();
 
-    final dir = await getTemporaryDirectory();
+      // local file path
+      final filePath = '${dir.path}/old_face.jpg';
 
-    final filePath = "${dir.path}/old_face.jpg";
+      // download image
+      await dio.download(url, filePath);
 
-    await dio.download(url, filePath);
+      // return local file
+      return File(filePath);
+    } catch (e) {
+      debugPrint("DOWNLOAD IMAGE ERROR => $e");
+      rethrow;
+    }
+  }
 
-    return File(filePath);
+  void resetFaceScanner() {
+    isFaceValid = false;
+    isCapturing = false;
+    isProcessingFrame = false;
+
+    captureCount = 0;
+    currentAngleIndex = 0;
+
+    instructionText = "Align your face properly";
+
+    croppedFaceImages.clear();
+    punchImage = null;
+
+    notifyListeners();
   }
   @override
   void dispose() {

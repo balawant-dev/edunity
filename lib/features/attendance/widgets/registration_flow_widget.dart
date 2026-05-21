@@ -58,7 +58,7 @@ class RegistrationFlowWidget extends StatelessWidget {
 
           /// BUTTON
           ///
-          CustomButton(text:  "Start Face Scan",isLoading: provider.isRegistering,onTap:() async {
+          CustomButton(text:  "Start Face Registration",isLoading: provider.isRegistering,onTap:() async {
 
             if (provider.primaryImage == null) {
               AppToast.show(
