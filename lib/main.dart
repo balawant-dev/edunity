@@ -9,6 +9,7 @@ import 'core/routes/app_routes.dart';
 import 'core/routes/route_generator.dart';
 import 'core/services/navigation_service.dart';
 import 'features/attendance/provider/attendance_provider.dart';
+import 'features/attendance/service/face_recognition_service.dart';
 import 'features/auth/change_password/provider/change_password_provider.dart';
 import 'features/auth/college_code/provider/college_provider.dart';
 import 'features/auth/forgot_password/provider/forgot_password_provider.dart';
@@ -21,9 +22,14 @@ import 'features/onboarding/provider/onboarding_provider.dart';
 
 import 'features/profile/provider/profile_provider.dart';
 import 'features/splash/provider/splash_provider.dart';
-//git code
+Future<void> main() async {
 
-void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+
+
+  await FaceRecognitionService.instance.init();
+
   runApp(const MyApp());
 }
 

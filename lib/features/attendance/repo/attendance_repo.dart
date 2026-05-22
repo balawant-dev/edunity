@@ -156,6 +156,7 @@ class AttendanceRepo {
 
     /// FACE IMAGES
     for (var file in images) {
+    // for (var file in primaryImages) {
 
       debugPrint(
         "FACE IMAGE => ${file.path}",

@@ -219,7 +219,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "v1.1.2",
+                          "v1.1.6",
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.black45,

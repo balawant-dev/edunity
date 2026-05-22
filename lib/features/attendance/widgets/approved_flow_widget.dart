@@ -166,6 +166,8 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
               // === Main Flow ===
               final success = await widget.provider.verifyFaceAndPunch(context);
 
+              print('chejjkdckjsdkjcjks===$success');
+
               if (!success) {
                 AppToast.show(widget.provider.instructionText);
                 return;
@@ -175,7 +177,6 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
               print("Kya success pop proper show ho rha ahi ki nhi >>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
 
-              // Face matched successfully → Now Punch
               await widget.provider.punchAttendance(locationId: location.locationId);
 
 

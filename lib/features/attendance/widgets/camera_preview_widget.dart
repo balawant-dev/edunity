@@ -56,28 +56,28 @@ class CameraPreviewWidget extends StatelessWidget {
             ),
 
             // Dark Overlay
-            Container(color: Colors.black.withOpacity(0.4)),
+            // Container(color: Colors.black.withOpacity(0.4)),
 
             // Face Guide Oval
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 240,
-              height: 300,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: provider.isFaceValid ? Colors.greenAccent : Colors.white,
-                  width: 5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: (provider.isFaceValid ? Colors.green : Colors.black.withOpacity(0.4))
-                        .withOpacity(0.3),
-                    blurRadius: 20,
-                  ),
-                ],
-              ),
-            ),
+            // AnimatedContainer(
+            //   duration: const Duration(milliseconds: 300),
+            //   width: 240,
+            //   height: 300,
+            //   decoration: BoxDecoration(
+            //     borderRadius: BorderRadius.circular(999),
+            //     border: Border.all(
+            //       color: provider.isFaceValid ? Colors.greenAccent : Colors.white,
+            //       width: 5,
+            //     ),
+            //     boxShadow: [
+            //       BoxShadow(
+            //         color: (provider.isFaceValid ? Colors.green : Colors.black.withOpacity(0.4))
+            //             .withOpacity(0.3),
+            //         blurRadius: 20,
+            //       ),
+            //     ],
+            //   ),
+            // ),
 
             // Top Instruction
             Positioned(

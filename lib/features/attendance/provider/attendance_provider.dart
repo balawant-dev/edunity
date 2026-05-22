@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:camera/camera.dart';
+// import 'package:face_verification/face_verification.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/routes/app_routes.dart';
 import '../model/faceImagesModel.dart';
 import '../model/face_registration_model.dart';
@@ -19,6 +21,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../service/face_recognition_service.dart';
 import '../widgets/success_attendance_dialog.dart';
 class AttendanceProvider extends ChangeNotifier {
 
@@ -221,7 +224,7 @@ class AttendanceProvider extends ChangeNotifier {
       notifyListeners();
 
       // 1. fetch face
-      await getFaceImages();
+      // await getFaceImages();
 
       if (faceImagesModel == null ||
           faceImagesModel!.primaryImages == null ||
@@ -241,32 +244,51 @@ class AttendanceProvider extends ChangeNotifier {
       instructionText = "Matching face...";
       notifyListeners();
 
-      final oldImageUrl = faceImagesModel!.primaryImages!.first.url!;
-      final oldFile = await downloadImage(oldImageUrl);
+      // final oldImageUrl = faceImagesModel!.primaryImages!.first.url!;
+      // final oldFile = await downloadImage(oldImageUrl);
+      //
+      // final response = await repo.newFaceMatchApi(
+      //   oldImage: oldFile,
+      //   newImage: punchImage!,
+      // );
+      //
+      // if (response.status == true && response.match == true) {
+      //
+      //   // 🔥 SHOW DIALOG IMMEDIATELY
+      //   if (context.mounted) {
+      //     showDialog(
+      //       context: context,
+      //       barrierDismissible: false,
+      //       builder: (_) => SuccessAttendanceDialog(
+      //         onHomePressed: () {
+      //           Navigator.pushReplacementNamed(context, AppRoutes.home);
+      //         },
+      //       ),
+      //     );
+      //   }
+      //
+      //   await punchAttendance(locationId: locationId);
+      // } else {
+      //   instructionText = "Face not matched";
+      // }
 
-      final response = await repo.newFaceMatchApi(
-        oldImage: oldFile,
-        newImage: punchImage!,
+      final matched =
+      await verifyFaceAndPunch(
+        context,
       );
 
-      if (response.status == true && response.match == true) {
+      if (matched) {
 
-        // 🔥 SHOW DIALOG IMMEDIATELY
-        if (context.mounted) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => SuccessAttendanceDialog(
-              onHomePressed: () {
-                Navigator.pushReplacementNamed(context, AppRoutes.home);
-              },
-            ),
-          );
-        }
+        await punchAttendance(
+          locationId: locationId,
+        );
 
-        await punchAttendance(locationId: locationId);
+
+
       } else {
-        instructionText = "Face not matched";
+
+        instructionText =
+        "Face not matched";
       }
 
     } catch (e) {
@@ -285,10 +307,10 @@ class AttendanceProvider extends ChangeNotifier {
   Future<void> initialize() async {
     faceDetector = FaceDetector(
       options: FaceDetectorOptions(
-        performanceMode: FaceDetectorMode.fast,
+        performanceMode: FaceDetectorMode.accurate,
         enableContours: false,
-        enableClassification: false,
-        enableLandmarks: false,
+        enableClassification: true,
+        enableLandmarks: true,
         enableTracking: true,
         minFaceSize: 0.15,
       ),
@@ -311,7 +333,7 @@ class AttendanceProvider extends ChangeNotifier {
 
     cameraController = CameraController(
       frontCamera,
-      ResolutionPreset.medium,
+      ResolutionPreset.high,
       enableAudio: false,
       imageFormatGroup: ImageFormatGroup.yuv420,
     );
@@ -517,14 +539,36 @@ class AttendanceProvider extends ChangeNotifier {
         return;
       }
 
-      if (faces.length > 1) {
+      // if (faces.length > 1) {
+      //   instructionText = "Only one face allowed";
+      //   isFaceValid = false;
+      //   notifyListeners();
+      //   return;
+      // }
+
+      // Remove tiny false detections
+      final validFaces = faces.where((f) {
+        return f.boundingBox.width > 80 &&
+            f.boundingBox.height > 80;
+      }).toList();
+
+      if (validFaces.length > 1) {
         instructionText = "Only one face allowed";
         isFaceValid = false;
         notifyListeners();
         return;
       }
 
-      final face = faces.first;
+      if (validFaces.isEmpty) {
+        instructionText = "Face not detected";
+        isFaceValid = false;
+        notifyListeners();
+        return;
+      }
+
+      final face = validFaces.first;
+
+      // final face = faces.first;
       final headY = face.headEulerAngleY ?? 0;   // Yaw (Left-Right)
       final headX = face.headEulerAngleX ?? 0;   // Pitch (Up-Down)
       final faceWidth = face.boundingBox.width;
@@ -604,12 +648,126 @@ class AttendanceProvider extends ChangeNotifier {
   /// ============================================================
   /// REGISTER FACE
   /// ============================================================
-
-  Future<void> registerFace() async {
+///api
+  // Future<void> registerFace() async {
+  //
+  //   try {
+  //
+  //     isRegistering = true;
+  //
+  //     notifyListeners();
+  //
+  //     debugPrint("REGISTER trhrowwehdwhd : ${primaryImage!.path}");
+  //
+  //     faceRegistrationModel =
+  //     await repo.registerFace(
+  //
+  //       primaryImages: [primaryImage!],
+  //
+  //       images: croppedFaceImages,
+  //     );
+  //
+  //     final prefs = await SharedPreferences.getInstance();
+  //
+  //     await prefs.setString(
+  //       "profile_id",
+  //       faceRegistrationModel?.profileId ?? "",
+  //     );
+  //
+  //     debugPrint("REGISTER trhrowwehdwhd : ${primaryImage!.path}");
+  //
+  //     await FaceVerification.instance.init();
+  //
+  //     await FaceVerification.instance.registerFromImagePath(
+  //
+  //       id: faceRegistrationModel?.profileId ?? "",
+  //
+  //       imagePath: primaryImage!.path,
+  //
+  //       imageId: 'work_id',
+  //     );
+  //     debugPrint("REGISTER trhrowwehdwhd : ${primaryImage!.path}");
+  //
+  //     await getFaceStatus();
+  //     // ✅ RESET UI HERE
+  //     resetFaceScanner();
+  //
+  //   } catch (e) {
+  //
+  //     debugPrint("REGISTER ERROR : $e");
+  //   }
+  //
+  //   isRegistering = false;
+  //
+  //   notifyListeners();
+  // }
+  Future<void> registerFaceSingleImage() async {
 
     try {
 
+      if (primaryImage == null) return;
+
       isRegistering = true;
+
+      instructionText =
+      "Processing face...";
+
+      notifyListeners();
+
+      final inputImage =
+      InputImage.fromFile(
+        primaryImage!,
+      );
+
+      final faces =
+      await faceDetector.processImage(
+        inputImage,
+      );
+
+      if (faces.isEmpty) {
+
+        instructionText =
+        "No face detected";
+
+        return;
+      }
+
+      if (faces.length > 1) {
+
+        instructionText =
+        "Only one face allowed";
+
+        return;
+      }
+
+      final face = faces.first;
+
+      final valid =
+      validateFaceQuality(face);
+
+      if (!valid) {
+        return;
+      }
+
+      instructionText =
+      "Extracting features...";
+
+      notifyListeners();
+
+      final embedding =
+      await FaceRecognitionService.instance
+          .extractEmbedding(
+        primaryImage!,
+        face,
+      );
+
+      await FaceRecognitionService.instance
+          .saveSingleEmbedding(
+        embedding,
+      );
+
+      instructionText =
+      "Uploading registration...";
 
       notifyListeners();
 
@@ -618,23 +776,175 @@ class AttendanceProvider extends ChangeNotifier {
 
         primaryImages: [primaryImage!],
 
-        images: croppedFaceImages,
+        images: [primaryImage!],
       );
 
+      instructionText =
+      "Face registered successfully";
+
       await getFaceStatus();
-      // ✅ RESET UI HERE
+
       resetFaceScanner();
 
     } catch (e) {
 
-      debugPrint("REGISTER ERROR : $e");
+      debugPrint(
+        "REGISTER ERROR => $e",
+      );
+
+      instructionText =
+      "Registration failed";
+
+    } finally {
+
+      isRegistering = false;
+
+      notifyListeners();
     }
-
-    isRegistering = false;
-
-    notifyListeners();
   }
 
+  bool validateFaceQuality(Face face) {
+
+    final headX =
+        face.headEulerAngleX ?? 0;
+
+    final headY =
+        face.headEulerAngleY ?? 0;
+
+    final width =
+        face.boundingBox.width;
+
+    if (width < 120) {
+      instructionText =
+      "Move closer to camera";
+      return false;
+    }
+
+    if (headX.abs() > 18 ||
+        headY.abs() > 18) {
+
+      instructionText =
+      "Keep face straight";
+
+      return false;
+    }
+
+    return true;
+  }
+
+  ///below okay for multiple image
+
+  Future<void> registerFace() async {
+
+    try {
+
+      if (primaryImage == null) return;
+
+      isRegistering = true;
+
+      notifyListeners();
+
+      /// =========================================
+      /// FACE DETECT
+      /// =========================================
+
+      final inputImage =
+      InputImage.fromFile(primaryImage!);
+
+      final faces =
+      await faceDetector.processImage(
+        inputImage,
+      );
+
+
+      faceRegistrationModel =
+          await repo.registerFace(
+
+            primaryImages: [primaryImage!],
+
+            images: croppedFaceImages,
+          );
+
+      if (faces.isEmpty) {
+
+        instructionText =
+        "No face detected";
+
+        return;
+      }
+
+      /// =========================================
+      /// MULTI EMBEDDINGS
+      /// =========================================
+
+      List<List<double>> embeddings = [];
+
+      /// Primary image embedding
+
+      final primaryEmbedding =
+      await FaceRecognitionService.instance
+          .extractEmbedding(
+        primaryImage!,
+        faces.first,
+      );
+
+      embeddings.add(primaryEmbedding);
+
+      /// Angle images embeddings
+
+      for (final image in croppedFaceImages) {
+
+        final input =
+        InputImage.fromFile(image);
+
+        final detected =
+        await faceDetector.processImage(
+          input,
+        );
+
+        if (detected.isEmpty) continue;
+
+        final emb =
+        await FaceRecognitionService.instance
+            .extractEmbedding(
+          image,
+          detected.first,
+        );
+
+        embeddings.add(emb);
+      }
+
+      /// =========================================
+      /// AVERAGE EMBEDDING
+      /// =========================================
+
+      await FaceRecognitionService.instance
+          .saveEmbeddings(embeddings);
+
+      ///uncomment above
+      instructionText =
+      "Face registered successfully";
+
+      await getFaceStatus();
+
+      resetFaceScanner();
+
+    } catch (e) {
+
+      debugPrint(
+        "REGISTER ERROR => $e",
+      );
+
+      instructionText =
+      "Registration failed";
+
+    } finally {
+
+      isRegistering = false;
+
+      notifyListeners();
+    }
+  }
   /// ============================================================
   /// PUNCH IMAGE
   /// ============================================================
@@ -646,93 +956,122 @@ class AttendanceProvider extends ChangeNotifier {
   /// FAST PUNCH IMAGE CAPTURE (Single Good Image)
   /// ============================================================
   Future<bool> capturePunchImage() async {
+
+    if (cameraController == null) {
+      return false;
+    }
+
+    /// Prevent duplicate capture
+    if (isProcessingFrame ||
+        cameraController!.value.isTakingPicture ||
+        !cameraController!.value.isInitialized) {
+      return false;
+    }
+
     try {
-      if (cameraController == null ||
-          !cameraController!.value.isInitialized ||
-          isProcessingFrame) {
-        return false;
-      }
 
       isProcessingFrame = true;
 
       instructionText = "Scanning face...";
       isFaceValid = false;
+
       notifyListeners();
 
-      // Small delay for camera stability
-      await Future.delayed(const Duration(milliseconds: 120));
+      await Future.delayed(
+        const Duration(milliseconds: 150),
+      );
 
-      final XFile image = await cameraController!.takePicture();
+      /// SAFE CAPTURE
+      final XFile image =
+      await cameraController!.takePicture();
 
       final file = File(image.path);
 
-      final inputImage = InputImage.fromFile(file);
+      final inputImage =
+      InputImage.fromFile(file);
 
-      final faces = await faceDetector.processImage(inputImage);
+      final faces =
+      await faceDetector.processImage(
+        inputImage,
+      );
 
       if (faces.isEmpty) {
+
         instructionText = "Face not detected";
-        isFaceValid = false;
+
         notifyListeners();
-        isProcessingFrame = false;
+
         return false;
       }
 
       if (faces.length > 1) {
+
         instructionText = "Only one face allowed";
-        isFaceValid = false;
+
         notifyListeners();
-        isProcessingFrame = false;
+
         return false;
       }
 
       final face = faces.first;
 
-      final headX = face.headEulerAngleX ?? 0;
-      final headY = face.headEulerAngleY ?? 0;
+      final headX =
+          face.headEulerAngleX ?? 0;
 
-      final faceWidth = face.boundingBox.width;
+      final headY =
+          face.headEulerAngleY ?? 0;
 
-      // Relax validation थोड़ा
+      final faceWidth =
+          face.boundingBox.width;
+
       if (faceWidth < 80) {
+
         instructionText = "Move closer";
-        isFaceValid = false;
+
         notifyListeners();
-        isProcessingFrame = false;
+
         return false;
       }
 
-      if (headX.abs() > 18 || headY.abs() > 18) {
-        instructionText = "Keep face straight";
-        isFaceValid = false;
+      /// Relaxed angles
+      if (headX.abs() > 20 ||
+          headY.abs() > 20) {
+
+        instructionText =
+        "Keep face straight";
+
         notifyListeners();
-        isProcessingFrame = false;
+
         return false;
       }
 
-      // SUCCESS
       punchImage = file;
 
       isFaceValid = true;
 
-      instructionText = "Face detected";
+      instructionText =
+      "Face detected";
 
       notifyListeners();
-
-      isProcessingFrame = false;
 
       return true;
 
     } catch (e) {
 
-      debugPrint("PUNCH ERROR => $e");
-
-      isProcessingFrame = false;
+      debugPrint(
+        "PUNCH ERROR => $e",
+      );
 
       return false;
+
+    } finally {
+
+      /// ALWAYS RESET
+      isProcessingFrame = false;
+
+      notifyListeners();
     }
   }
-
   // Future<bool> capturePunchImage() async {
   //   try {
   //     if (cameraController == null || !cameraController!.value.isInitialized) {
@@ -1022,7 +1361,7 @@ class AttendanceProvider extends ChangeNotifier {
 
     } catch (e) {
 
-      debugPrint("PUNCH ERROR : $e");
+      debugPrint("PUNCH dfsdfERROR : $e");
     }
 
     // isPunchLoading = false;
@@ -1033,85 +1372,375 @@ class AttendanceProvider extends ChangeNotifier {
   /// VERIFY FACE & PUNCH (Optimized)
   /// ============================================================
 
-  Future<bool> verifyFaceAndPunch(BuildContext context) async {
+  // Future<bool> verifyFaceAndPunch(BuildContext context) async {
+  //   try {
+  //     isPunchLoading = true;
+  //     instructionText = "Verifying face...";
+  //     // instructionText = "Verifying face...";
+  //     notifyListeners();
+  //
+  //     // await getFaceImages();
+  //
+  //     if (faceImagesModel == null ||
+  //         faceImagesModel!.primaryImages == null ||
+  //         faceImagesModel!.primaryImages!.isEmpty) {
+  //       instructionText = "No registered face found";
+  //       return false;
+  //     }
+  //
+  //     // Fast Capture (Only 1 good image)
+  //     final captureSuccess = await capturePunchImage();
+  //
+  //     if (!captureSuccess || punchImage == null) {
+  //       instructionText = "Face capture failed";
+  //       return false;
+  //     }
+  //
+  //     instructionText = "Matching face...";
+  //     notifyListeners();
+  //
+  //     // Download registered image
+  //     final oldImageUrl = faceImagesModel!.primaryImages!.first.url ?? "";
+  //     final oldImageFile = await downloadImage(oldImageUrl);
+  //
+  //     // Face Match API
+  //     final response = await repo.newFaceMatchApi(
+  //       oldImage: oldImageFile,
+  //       newImage: punchImage!,
+  //     );
+  //
+  //
+  //
+  //
+  //
+  //
+  //     if (response.status == true && (response.match ?? false)) {
+  //       instructionText = "Face matched successfully";
+  //       notifyListeners();
+  //       // Show Success Dialog
+  // // Make sure you pass context
+  // //       WidgetsBinding.instance.addPostFrameCallback((_) {
+  // //         if (context.mounted) {
+  // //           showDialog(
+  // //             context: context,
+  // //             barrierDismissible: false,
+  // //             builder: (context) => SuccessAttendanceDialog(
+  // //               onHomePressed: () {
+  // //                 Navigator.pushReplacementNamed(
+  // //                   context,
+  // //                   AppRoutes.home,
+  // //                 );
+  // //               },
+  // //             ),
+  // //           );
+  // //         }
+  // //       });
+  //
+  //       return true;
+  //     } else {
+  //       instructionText = "Face not matched";
+  //       return false;
+  //     }
+  //   } catch (e) {
+  //     debugPrint("VERIFY FACE ERROR => $e");
+  //     instructionText = "Face verification failed";
+  //     return false;
+  //   } finally {
+  //     isPunchLoading = false;
+  //     notifyListeners();
+  //   }
+  // }
+
+
+  Future<bool> verifyFaceAndPunch(
+      BuildContext context,
+      ) async {
+
     try {
+
       isPunchLoading = true;
-      instructionText = "Verifying face...";
-      // instructionText = "Verifying face...";
+
+      instructionText =
+      "Scanning face...";
+
       notifyListeners();
 
-      // await getFaceImages();
+      final captured =
+      await capturePunchImage();
 
-      if (faceImagesModel == null ||
-          faceImagesModel!.primaryImages == null ||
-          faceImagesModel!.primaryImages!.isEmpty) {
-        instructionText = "No registered face found";
+      if (!captured ||
+          punchImage == null) {
+
         return false;
       }
 
-      // Fast Capture (Only 1 good image)
-      final captureSuccess = await capturePunchImage();
-
-      if (!captureSuccess || punchImage == null) {
-        instructionText = "Face capture failed";
-        return false;
-      }
-
-      instructionText = "Matching face...";
-      notifyListeners();
-
-      // Download registered image
-      final oldImageUrl = faceImagesModel!.primaryImages!.first.url ?? "";
-      final oldImageFile = await downloadImage(oldImageUrl);
-
-      // Face Match API
-      final response = await repo.newFaceMatchApi(
-        oldImage: oldImageFile,
-        newImage: punchImage!,
+      final inputImage =
+      InputImage.fromFile(
+        punchImage!,
       );
 
+      final faces =
+      await faceDetector.processImage(
+        inputImage,
+      );
 
-
-
-
-
-      if (response.status == true && (response.match ?? false)) {
-        instructionText = "Face matched successfully";
-        notifyListeners();
-        // Show Success Dialog
-  // Make sure you pass context
-  //       WidgetsBinding.instance.addPostFrameCallback((_) {
-  //         if (context.mounted) {
-  //           showDialog(
-  //             context: context,
-  //             barrierDismissible: false,
-  //             builder: (context) => SuccessAttendanceDialog(
-  //               onHomePressed: () {
-  //                 Navigator.pushReplacementNamed(
-  //                   context,
-  //                   AppRoutes.home,
-  //                 );
-  //               },
-  //             ),
-  //           );
-  //         }
-  //       });
-
-        return true;
-      } else {
-        instructionText = "Face not matched";
+      if (faces.isEmpty) {
         return false;
       }
+
+      final embedding =
+      await FaceRecognitionService.instance
+          .extractEmbedding(
+        punchImage!,
+        faces.first,
+      );
+
+      final matched =
+      await FaceRecognitionService.instance
+          .verifyFace(
+        embedding,
+      );
+
+      if (!matched) {
+
+        instructionText =
+        "Face not matched";
+
+        return false;
+      }
+
+      instructionText =
+      "Face matched";
+
+      return true;
+
     } catch (e) {
-      debugPrint("VERIFY FACE ERROR => $e");
-      instructionText = "Face verification failed";
+
+      instructionText =
+      "Verification failed";
+
       return false;
+
     } finally {
+
       isPunchLoading = false;
+
       notifyListeners();
     }
   }
+///fjhdfjals Thikm hai below
+//   Future<bool> verifyFaceAndPunch(
+//       BuildContext context,
+//       ) async {
+//
+//     try {
+//
+//       isPunchLoading = true;
+//
+//       instructionText =
+//       "Scanning face...";
+//
+//       notifyListeners();
+//
+//
+//       final captured =
+//       await capturePunchImage();
+//
+//       if (!captured || punchImage == null) {
+//
+//         instructionText =
+//         "Face capture failed";
+//
+//         return false;
+//       }
+//
+//       /// =========================================
+//       /// DETECT FACE
+//       /// =========================================
+//
+//       final inputImage =
+//       InputImage.fromFile(
+//         punchImage!,
+//       );
+//
+//       final faces =
+//       await faceDetector.processImage(
+//         inputImage,
+//       );
+//
+//       if (faces.isEmpty) {
+//
+//         instructionText =
+//         "No face detected";
+//
+//         return false;
+//       }
+//
+//       /// =========================================
+//       /// GENERATE EMBEDDING
+//       /// =========================================
+//
+//       instructionText =
+//       "Matching face...";
+//
+//       notifyListeners();
+//
+//       final currentEmbedding =
+//       await FaceRecognitionService.instance
+//           .extractEmbedding(
+//         punchImage!,
+//         faces.first,
+//       );
+//
+//       /// =========================================
+//       /// VERIFY
+//       /// =========================================
+//
+//       final matched =
+//       await FaceRecognitionService.instance
+//           .verifyFace(
+//         currentEmbedding,
+//       );
+//
+//       if (!matched) {
+//
+//         instructionText =
+//         "Face not matched";
+//
+//         return false;
+//       }
+//
+//       instructionText =
+//       "Face matched successfully";
+//
+//       notifyListeners();
+//
+//       /// =========================================
+//       /// SUCCESS DIALOG
+//       /// =========================================
+//       if (matched) {
+//
+//         WidgetsBinding.instance.addPostFrameCallback((_) {
+//
+//           if (context.mounted) {
+//
+//             showDialog(
+//               context: context,
+//               barrierDismissible: false,
+//               builder: (_) => SuccessAttendanceDialog(
+//                 onHomePressed: () {
+//
+//                   Navigator.of(
+//                     context,
+//                     rootNavigator: true,
+//                   ).pushReplacementNamed(
+//                     AppRoutes.home,
+//                   );
+//                 },
+//               ),
+//             );
+//           }
+//         });
+//       }
+//
+//       return true;
+//
+//     } catch (e) {
+//
+//       debugPrint(
+//         "VERIFY ERROR => $e",
+//       );
+//
+//       instructionText =
+//       "Verification failed";
+//
+//       return false;
+//
+//     } finally {
+//
+//       isPunchLoading = false;
+//
+//       notifyListeners();
+//     }
+//   }
 
+  ///okeay above
+  // Future<bool> verifyFaceAndPunch(
+  //     BuildContext context) async {
+  //
+  //   try {
+  //
+  //     isPunchLoading = true;
+  //
+  //     instructionText = "Verifying face...";
+  //
+  //     notifyListeners();
+  //
+  //     final captureSuccess =
+  //     await capturePunchImage();
+  //
+  //     if (!captureSuccess || punchImage == null) {
+  //
+  //       instructionText =
+  //       "Face capture failed";
+  //
+  //       return false;
+  //     }
+  //
+  //     instructionText = "Matching face...";
+  //
+  //     notifyListeners();
+  //
+  //     final prefs =
+  //     await SharedPreferences.getInstance();
+  //
+  //     final profileId =
+  //         prefs.getString("profile_id") ?? "";
+  //
+  //     final result =
+  //     await FaceVerification.instance.verifyFromImagePath(
+  //
+  //       staffId: profileId,
+  //
+  //       imagePath: punchImage!.path,
+  //     );       instructionText =
+  //     "Face matched successfully";
+  //
+  //     notifyListeners();
+  //
+  //     return true;
+  //
+  //     // if (result!.isVerified) {
+  //     //
+  //     //
+  //     //
+  //     // } else {
+  //     //
+  //     //   instructionText =
+  //     //   "Face not matched";
+  //     //
+  //     //   notifyListeners();
+  //     //
+  //     //   return false;
+  //     // }
+  //
+  //   } catch (e) {
+  //
+  //     debugPrint(
+  //         "VERIFY FACE ERROR => $e");
+  //
+  //     instructionText =
+  //     "Face verification failed";
+  //
+  //     return false;
+  //
+  //   } finally {
+  //
+  //     isPunchLoading = false;
+  //
+  //     notifyListeners();
+  //   }
+  // }
   // Future<bool> verifyFaceAndPunch() async {
   //
   //   try {
@@ -1195,20 +1824,34 @@ class AttendanceProvider extends ChangeNotifier {
   }
 
   void resetFaceScanner() {
+
     isFaceValid = false;
-    isCapturing = false;
+
     isProcessingFrame = false;
 
-    captureCount = 0;
-    currentAngleIndex = 0;
+    instructionText =
+    "Upload your face image";
 
-    instructionText = "Align your face properly";
-
-    croppedFaceImages.clear();
     punchImage = null;
 
     notifyListeners();
   }
+
+  // void resetFaceScanner() {
+  //   isFaceValid = false;
+  //   isCapturing = false;
+  //   isProcessingFrame = false;
+  //
+  //   captureCount = 0;
+  //   currentAngleIndex = 0;
+  //
+  //   instructionText = "Align your face properly";
+  //
+  //   croppedFaceImages.clear();
+  //   punchImage = null;
+  //
+  //   notifyListeners();
+  // }
   @override
   void dispose() {
     captureTimer?.cancel();
