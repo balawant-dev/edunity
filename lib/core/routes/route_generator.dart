@@ -59,6 +59,10 @@
 import 'package:flutter/material.dart';
 
 import '../../features/attendance/screen/face_attendance_screen.dart';
+import '../../features/attendence_summary/screen/attendanceHomeScreen.dart';
+import '../../features/attendence_summary/screen/monthlySummaryScreen.dart';
+import '../../features/attendence_summary/screen/punch_screen.dart';
+import '../../features/attendence_summary/screen/quickAccessScreen.dart';
 import '../../features/auth/change_password/screen/change_password_screen.dart';
 import '../../features/auth/college_code/model/college_code_model.dart';
 import '../../features/auth/college_code/screen/college_code_screen.dart';
@@ -108,6 +112,13 @@ class RouteGenerator {
         );
       case AppRoutes.changePassword:
         return MaterialPageRoute(builder: (_) => const ChangePasswordScreen());
+        case AppRoutes.attendanceSummary:
+        return MaterialPageRoute(builder: (_) => const PunchesScreen());
+        case AppRoutes.monthlySummary:
+        return MaterialPageRoute(builder: (_) => const MonthlySummaryScreen());
+        case AppRoutes.attendanceHome:
+        return MaterialPageRoute(builder: (_) => const AttendanceHomeScreen());     case AppRoutes.quickAccess:
+        return MaterialPageRoute(builder: (_) => const QuickAccessScreen());
       case AppRoutes.faceAttendance:
         return MaterialPageRoute(
           builder: (_) => const FaceAttendanceScreen(isBack: true),

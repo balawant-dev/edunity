@@ -177,7 +177,7 @@ class _ApprovedFlowWidgetState extends State<ApprovedFlowWidget> {
               print("Kya success pop proper show ho rha ahi ki nhi >>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
 
-              await widget.provider.punchAttendance(locationId: location.locationId);
+              await widget.provider.punchAttendance(locationId: location.locationId,context: context);
 
 
 

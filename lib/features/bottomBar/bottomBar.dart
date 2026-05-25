@@ -3,6 +3,7 @@ import 'package:edunity/core/constants/app_images.dart';
 import 'package:edunity/features/attendance/screen/face_attendance_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../attendence_summary/screen/quickAccessScreen.dart';
 import '../home/screen/home_screen.dart';
 import '../profile/screen/profile_screen.dart';
 
@@ -145,16 +146,5 @@ class _MainScreenState extends State<MainScreen> {
 }
 
 
-class QuickAccessScreen extends StatelessWidget {
-  const QuickAccessScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text("Quick Access Coming Soon"),
-      ),
-    );
-  }
-}
 

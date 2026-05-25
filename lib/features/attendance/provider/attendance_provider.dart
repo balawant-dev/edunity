@@ -280,7 +280,7 @@ class AttendanceProvider extends ChangeNotifier {
       if (matched) {
 
         await punchAttendance(
-          locationId: locationId,
+          locationId: locationId,context: context
         );
 
 
@@ -1321,6 +1321,7 @@ class AttendanceProvider extends ChangeNotifier {
 
   Future<void> punchAttendance({
     required String locationId,
+    required BuildContext context,
   }) async {
 
     try {
@@ -1354,8 +1355,31 @@ class AttendanceProvider extends ChangeNotifier {
           punchImage: punchImage!,
         );
       }
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AttendanceSuccessPopup(
+            onHomeTap: () {
+
+              Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.home,
+              );
+
+            },
+          );
+        },
+      );
+      // Navigator.pushReplacementNamed(
+      //
+      //   context,
+      //
+      //   AppRoutes.home,
+      // );
 
       await getTodayAttendance();
+
       // ✅ RESET UI HERE
       resetFaceScanner();
 

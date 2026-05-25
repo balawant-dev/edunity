@@ -322,7 +322,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           child: Center(
                             child: Text(
-                              "Forget Password",
+                              "Forgot Password",
                               style: AppTextStyles.semiBold(
                                 size: 13,
                                 color: AppColors.primary,

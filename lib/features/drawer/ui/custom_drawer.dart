@@ -198,13 +198,40 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         Navigator.pushNamed(context, AppRoutes.campusConnect);
                       },
                     ),
-                    // drawerItem(
-                    //   icon: Icons.sos,
-                    //   title: "SOS",
-                    //   onTap: () {
-                    //
-                    //   },
-                    // ),
+                    drawerItem(
+                      icon: Icons.note_alt,
+                      title: "Attendance Summary",
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.attendanceSummary,
+                        );
+
+                      },
+                    ),
+
+                    drawerItem(
+                      icon: Icons.eleven_mp_outlined,
+                      title: "Monthly Summary",
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.monthlySummary,
+                        );
+
+                      },
+                    ),
+                    drawerItem(
+                      icon: Icons.ten_k_outlined,
+                      title: "Attendance Home",
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.attendanceHome,
+                        );
+
+                      },
+                    ),
 
                     const Divider(height: 32, thickness: 1),
 
@@ -330,7 +357,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       // // Navigator.pop(context, true);
                       // navPushBottomRemove(context: context, action: SplashScreen(),duration: 1);
                     },
-                    child: const Text("Logout"),
+                    child: const Text("Logout",style: TextStyle(color: Colors.white),),
                   ),
                 ],
               ),
