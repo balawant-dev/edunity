@@ -56,6 +56,7 @@
 //   }
 // }
 
+import 'package:edunity/features/staff/employee/views/select_employee_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../../features/attendance/screen/face_attendance_screen.dart';
@@ -112,12 +113,21 @@ class RouteGenerator {
         );
       case AppRoutes.changePassword:
         return MaterialPageRoute(builder: (_) => const ChangePasswordScreen());
-        case AppRoutes.attendanceSummary:
+      case AppRoutes.attendanceSummary:
         return MaterialPageRoute(builder: (_) => const PunchesScreen());
-        case AppRoutes.monthlySummary:
+      case AppRoutes.selectEmployeeScreen:
+        final action = settings.arguments as EmployeeActionType;
+
+        return MaterialPageRoute(
+          builder: (_) => SelectEmployeeScreen(
+            actionType: action,
+          ),
+        );
+      case AppRoutes.monthlySummary:
         return MaterialPageRoute(builder: (_) => const MonthlySummaryScreen());
-        case AppRoutes.attendanceHome:
-        return MaterialPageRoute(builder: (_) => const AttendanceHomeScreen());     case AppRoutes.quickAccess:
+      case AppRoutes.attendanceHome:
+        return MaterialPageRoute(builder: (_) => const AttendanceHomeScreen());
+      case AppRoutes.quickAccess:
         return MaterialPageRoute(builder: (_) => const QuickAccessScreen());
       case AppRoutes.faceAttendance:
         return MaterialPageRoute(

@@ -22,11 +22,11 @@ import 'features/onboarding/provider/onboarding_provider.dart';
 
 import 'features/profile/provider/profile_provider.dart';
 import 'features/splash/provider/splash_provider.dart';
+import 'features/staff/employee/provider/manager_face_provider.dart';
+import 'features/staff/employee/provider/onbehalf_employee_provider.dart';
+
 Future<void> main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
-
-
 
   await FaceRecognitionService.instance.init();
 
@@ -41,10 +41,8 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => SplashProvider()),
-
         ChangeNotifierProvider(create: (_) => OnboardingProvider()),
         ChangeNotifierProvider(create: (_) => ForgotPasswordProvider()),
-
         ChangeNotifierProvider(create: (_) => OtpProvider()),
         ChangeNotifierProvider(create: (_) => ResetPasswordProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
@@ -55,24 +53,24 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => InternetProvider()),
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
         ChangeNotifierProvider(create: (_) => CMSProvider()),
+        ChangeNotifierProvider(create: (_) => ManagerFaceProvider()),
+        ChangeNotifierProvider(
+          create: (_) => OnBehalfEmployeeProvider(),
+        ),
       ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812),
-
         builder: (context, child) {
-          return  MaterialApp(
-              navigatorKey: NavigationService.navigatorKey,
-              debugShowCheckedModeBanner: false,
-            
-              initialRoute: AppRoutes.splash,
-              onGenerateRoute: RouteGenerator.generateRoute,
+          return MaterialApp(
+            navigatorKey: NavigationService.navigatorKey,
+            debugShowCheckedModeBanner: false,
+            initialRoute: AppRoutes.splash,
+            onGenerateRoute: RouteGenerator.generateRoute,
             builder: (context, child) {
-
               return NetworkWrapper(
                 child: child!,
               );
             },
-
           );
         },
       ),

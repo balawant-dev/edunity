@@ -18,13 +18,13 @@ class AppRoutes {
   static const String home = "/home";
   static const String profile = "/profile";
 
-
   static const String privacyPolicy = "/privacy-policy";
   static const String aboutUs = "/about-us";
   static const String termsCondition = "/terms-condition";
   static const String campusConnect = "/campus-connect";
   static const String mapView = "/map-view";
   static const String attendanceSummary = "/attendance-summary";
+  static const String selectEmployeeScreen = "/selectEmployeeScreen";
   static const String monthlySummary = "/monthly-summary";
   static const String attendanceHome = "/attendance-home";
   static const String quickAccess = "/quick-access";

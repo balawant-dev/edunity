@@ -1,9 +1,6 @@
-
-
-
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+
 import '../provider/attendance_provider.dart';
 
 class CameraPreviewWidget extends StatelessWidget {
@@ -16,31 +13,55 @@ class CameraPreviewWidget extends StatelessWidget {
     required this.showProgress,
   });
 
+  Color getBorderColor() {
+    if (provider.isFaceValid) {
+      return Colors.greenAccent;
+    }
+
+    return Colors.orangeAccent;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (provider.cameraController == null ||
         !provider.cameraController!.value.isInitialized) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: const EdgeInsets.symmetric(
+        horizontal: 6,
+      ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(
+          30,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 25,
-            offset: const Offset(0, 12),
+            color: Colors.black.withOpacity(
+              0.25,
+            ),
+            blurRadius: 30,
+            offset: const Offset(
+              0,
+              15,
+            ),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(
+          30,
+        ),
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // CAMERA PREVIEW (Fixed Mirror)
+            /// =======================
+            /// CAMERA
+            /// =======================
+
             SizedBox.expand(
               child: FittedBox(
                 fit: BoxFit.cover,
@@ -48,72 +69,162 @@ class CameraPreviewWidget extends StatelessWidget {
                   width: provider.cameraController!.value.previewSize!.height,
                   height: provider.cameraController!.value.previewSize!.width,
                   child: Transform.scale(
-                    scaleX: -1, // Natural mirror for front camera (Best way)
-                    child: CameraPreview(provider.cameraController!),
+                    scaleX: -1,
+                    child: CameraPreview(
+                      provider.cameraController!,
+                    ),
                   ),
                 ),
               ),
             ),
 
-            // Dark Overlay
-            // Container(color: Colors.black.withOpacity(0.4)),
+            /// =======================
+            /// DARK MASK
+            /// =======================
 
-            // Face Guide Oval
-            // AnimatedContainer(
-            //   duration: const Duration(milliseconds: 300),
-            //   width: 240,
-            //   height: 300,
-            //   decoration: BoxDecoration(
-            //     borderRadius: BorderRadius.circular(999),
-            //     border: Border.all(
-            //       color: provider.isFaceValid ? Colors.greenAccent : Colors.white,
-            //       width: 5,
-            //     ),
-            //     boxShadow: [
-            //       BoxShadow(
-            //         color: (provider.isFaceValid ? Colors.green : Colors.black.withOpacity(0.4))
-            //             .withOpacity(0.3),
-            //         blurRadius: 20,
-            //       ),
-            //     ],
-            //   ),
-            // ),
+            Container(
+              color: Colors.black.withOpacity(
+                0.18,
+              ),
+            ),
 
-            // Top Instruction
+            /// =======================
+            /// FACE OVAL
+            /// =======================
+
+            AnimatedContainer(
+              duration: const Duration(
+                milliseconds: 250,
+              ),
+              width: 250,
+              height: 320,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(
+                  999,
+                ),
+                border: Border.all(
+                  color: getBorderColor(),
+                  width: 5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: getBorderColor().withOpacity(
+                      0.35,
+                    ),
+                    blurRadius: 25,
+                  ),
+                ],
+              ),
+            ),
+
+            /// =======================
+            /// MAIN INSTRUCTION
+            /// =======================
+
             Positioned(
               top: 16,
-              left: 0,
-              right: 0,
+              left: 12,
+              right: 12,
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black87,
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(
+                      30,
+                    ),
                   ),
                   child: Text(
                     provider.instructionText,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
             ),
 
-            // Capture Count
+            /// =======================
+            /// LIVENESS
+            /// =======================
+
+            if (provider.livenessInstruction.isNotEmpty)
+              Positioned(
+                top: 75,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey,
+                    borderRadius: BorderRadius.circular(
+                      20,
+                    ),
+                  ),
+                  child: Text(
+                    provider.livenessInstruction,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
+            /// =======================
+            /// BRIGHTNESS
+            /// =======================
+
+            // Positioned(
+            //   left: 16,
+            //   bottom: 120,
+            //   child: Container(
+            //     padding: const EdgeInsets.symmetric(
+            //       horizontal: 14,
+            //       vertical: 8,
+            //     ),
+            //     decoration: BoxDecoration(
+            //       color: Colors.black87,
+            //       borderRadius: BorderRadius.circular(
+            //         20,
+            //       ),
+            //     ),
+            //     child: Text(
+            //       "Light ${provider.latestBrightness.toStringAsFixed(0)}",
+            //       style: const TextStyle(
+            //         color: Colors.white,
+            //         fontSize: 12,
+            //         fontWeight: FontWeight.w500,
+            //       ),
+            //     ),
+            //   ),
+            // ),
+
+            /// =======================
+            /// PROGRESS
+            /// =======================
+
             if (showProgress)
               Positioned(
                 right: 16,
                 top: 16,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black87,
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(
+                      30,
+                    ),
                   ),
                   child: Text(
                     "${provider.captureCount}/5",
@@ -126,53 +237,80 @@ class CameraPreviewWidget extends StatelessWidget {
                 ),
               ),
 
-            // Progress Bar + Indicators
+            /// =======================
+            /// PROGRESS BAR
+            /// =======================
+
             if (showProgress)
               Positioned(
-                bottom: 20,
+                bottom: 22,
                 left: 24,
                 right: 24,
                 child: Column(
                   children: [
-                    // Progress Line
                     Stack(
                       children: [
                         Container(
                           height: 6,
                           decoration: BoxDecoration(
                             color: Colors.white24,
-                            borderRadius: BorderRadius.circular(100),
+                            borderRadius: BorderRadius.circular(
+                              100,
+                            ),
                           ),
                         ),
                         AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
+                          duration: const Duration(
+                            milliseconds: 250,
+                          ),
                           height: 6,
-                          width: MediaQuery.of(context).size.width * 0.72 * (provider.captureCount / 5),
+                          width: MediaQuery.of(context).size.width *
+                              0.72 *
+                              (provider.captureCount / 5),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(100),
-                            gradient: const LinearGradient(colors: [Color(0xff00E676), Color(0xff69F0AE)]),
+                            borderRadius: BorderRadius.circular(
+                              100,
+                            ),
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xff00E676),
+                                Color(0xff69F0AE),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-
-                    // Angle Indicators
+                    const SizedBox(
+                      height: 16,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (index) {
-                        final isActive = index < provider.captureCount;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: isActive ? 28 : 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(100),
-                            color: isActive ? const Color(0xff00E676) : Colors.white38,
-                          ),
-                        );
-                      }),
+                      children: List.generate(
+                        5,
+                        (index) {
+                          final active = index < provider.captureCount;
+
+                          return AnimatedContainer(
+                            duration: const Duration(
+                              milliseconds: 220,
+                            ),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                            ),
+                            width: active ? 28 : 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(
+                                100,
+                              ),
+                              color: active
+                                  ? const Color(0xff00E676)
+                                  : Colors.white38,
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),

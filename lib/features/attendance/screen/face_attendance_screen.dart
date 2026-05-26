@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,16 +9,13 @@ import '../widgets/registration_flow_widget.dart';
 
 class FaceAttendanceScreen extends StatefulWidget {
   final bool isBack;
-  const FaceAttendanceScreen({super.key,required this.isBack});
+  const FaceAttendanceScreen({super.key, required this.isBack});
 
   @override
-  State<FaceAttendanceScreen> createState() =>
-      _FaceAttendanceScreenState();
+  State<FaceAttendanceScreen> createState() => _FaceAttendanceScreenState();
 }
 
-class _FaceAttendanceScreenState
-    extends State<FaceAttendanceScreen> {
-
+class _FaceAttendanceScreenState extends State<FaceAttendanceScreen> {
   // @override
   // void initState() {
   //   super.initState();
@@ -38,46 +29,35 @@ class _FaceAttendanceScreenState
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       backgroundColor: Colors.white,
-
-     appBar: CustomAppBar(title:  "Face Attendance Single",showBack: false,showLogo: true,),
-
+      appBar: CustomAppBar(
+        title: "Face Attendance",
+        showBack: false,
+        showLogo: true,
+      ),
       body: Consumer<AttendanceProvider>(
-
         builder: (_, provider, __) {
-
           if (provider.isLoading) {
-
             return const Center(
               child: CircularProgressIndicator(),
             );
           }
 
           if (provider.cameraController == null ||
-              !provider.cameraController!
-                  .value
-                  .isInitialized) {
-
+              !provider.cameraController!.value.isInitialized) {
             return const Center(
               child: CircularProgressIndicator(),
             );
           }
 
-          final status =
-              provider.faceStatusModel
-                  ?.registrationStatus ??
-                  "none";
+          final status = provider.faceStatusModel?.registrationStatus ?? "none";
 
           /// ===============================
           /// REGISTRATION FLOW
           /// ===============================
 
-          if (status == "none" ||
-              status == "rejected") {
-
+          if (status == "none" || status == "rejected") {
             return RegistrationFlowWidget(
               provider: provider,
             );
@@ -88,7 +68,6 @@ class _FaceAttendanceScreenState
           /// ===============================
 
           if (status == "pending") {
-
             return const PendingFlowWidget();
           }
 

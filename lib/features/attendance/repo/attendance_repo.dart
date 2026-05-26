@@ -14,16 +14,11 @@ import '../model/punch_response_model.dart';
 import '../model/today_attendance_model.dart';
 
 class AttendanceRepo {
-
-  final ApiClient apiClient =
-  ApiClient();
+  final ApiClient apiClient = ApiClient();
 
   /// FACE STATUS
-  Future<FaceStatusModel>
-  getFaceStatus() async {
-
-    final response =
-    await apiClient.get(
+  Future<FaceStatusModel> getFaceStatus() async {
+    final response = await apiClient.get(
       ApiEndpoints.faceStatus,
     );
 
@@ -33,23 +28,19 @@ class AttendanceRepo {
   }
 
   /// TODAY ATTENDANCE
-  Future<TodayAttendanceModel>
-  getTodayAttendance() async {
-
-    final response =
-    await apiClient.get(
+  Future<TodayAttendanceModel> getTodayAttendance() async {
+    final response = await apiClient.get(
       ApiEndpoints.todayAttendance,
     );
 
     return TodayAttendanceModel.fromJson(
       response.data,
     );
-  }  /// TODAY ATTENDANCE
-  Future<FaceImagesModel>
-  getFaceImages() async {
+  }
 
-    final response =
-    await apiClient.get(
+  /// TODAY ATTENDANCE
+  Future<FaceImagesModel> getFaceImages() async {
+    final response = await apiClient.get(
       ApiEndpoints.faceImages,
     );
 
@@ -57,6 +48,7 @@ class AttendanceRepo {
       response.data,
     );
   }
+
   ///%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   /// SUB DOMAIN CODE
   Future<NewFaceMatchModel> newFaceMatchApi({
@@ -88,7 +80,6 @@ class AttendanceRepo {
       print("👉 Request Files:");
       print("   newimage: ${newImage.path.split('/').last}");
       print("   images: ${oldImage.path.split('/').last}");
-
 
       print("========================================");
 
@@ -126,6 +117,7 @@ class AttendanceRepo {
       rethrow;
     }
   }
+
   ///%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   /// REGISTER FACE
   /// REGISTER FACE
@@ -133,12 +125,10 @@ class AttendanceRepo {
     required List<File> primaryImages,
     required List<File> images,
   }) async {
-
     FormData formData = FormData();
 
     /// PRIMARY IMAGE
     for (var file in primaryImages) {
-
       debugPrint(
         "PRIMARY IMAGE => ${file.path}",
       );
@@ -156,7 +146,7 @@ class AttendanceRepo {
 
     /// FACE IMAGES
     for (var file in images) {
-    // for (var file in primaryImages) {
+      // for (var file in primaryImages) {
 
       debugPrint(
         "FACE IMAGE => ${file.path}",
@@ -186,7 +176,6 @@ class AttendanceRepo {
     );
 
     for (var element in formData.files) {
-
       debugPrint(
         "KEY => ${element.key}",
       );
@@ -253,7 +242,6 @@ class AttendanceRepo {
     String? note,
     String? lateCause,
   }) async {
-
     FormData formData = FormData.fromMap({
       "location_id": locationId,
       "note": note,
@@ -294,7 +282,6 @@ class AttendanceRepo {
     String? note,
     String? lateCause,
   }) async {
-
     FormData formData = FormData.fromMap({
       "location_id": locationId,
       "note": note,
@@ -310,13 +297,103 @@ class AttendanceRepo {
       print("${field.key}: ${field.value}");
     }
     for (var file in formData.files) {
-      print("${file.key}: [FILE] ${file.value.filename} (Path: ${punchImage.path})");
+      print(
+          "${file.key}: [FILE] ${file.value.filename} (Path: ${punchImage.path})");
     }
     print("----------------------");
     // ===================== PRINT LOGIC END =====================
 
     final response = await apiClient.multipartPost(
       ApiEndpoints.studentPunch,
+      data: formData,
+    );
+
+    return PunchResponseModel.fromJson(
+      response.data,
+    );
+  }
+
+  ///manager part26.5
+  Future<FaceRegistrationModel> managerRegisterEmployeeFace({
+    required int uid,
+    required List<File> primaryImages,
+    required List<File> images,
+  }) async {
+    FormData formData = FormData();
+
+    /// UID
+    formData.fields.add(
+      MapEntry(
+        "uid",
+        uid.toString(),
+      ),
+    );
+
+    /// PRIMARY
+    for (var file in primaryImages) {
+      formData.files.add(
+        MapEntry(
+          "primary_images[]",
+          await MultipartFile.fromFile(
+            file.path,
+            filename: file.path.split('/').last,
+          ),
+        ),
+      );
+    }
+
+    /// FACE IMAGES
+    for (var file in images) {
+      formData.files.add(
+        MapEntry(
+          "images[]",
+          await MultipartFile.fromFile(
+            file.path,
+            filename: file.path.split('/').last,
+          ),
+        ),
+      );
+    }
+
+    final response = await apiClient.multipartPost(
+      ApiEndpoints.managerRegisterFace,
+      data: formData,
+    );
+
+    return FaceRegistrationModel.fromJson(
+      response.data,
+    );
+  }
+
+  Future<TodayAttendanceModel> managerEmployeeTodayAttendance(
+    int uid,
+  ) async {
+    final response = await apiClient.get(
+      "${ApiEndpoints.managerTodayAttendance}?uid=$uid",
+    );
+
+    return TodayAttendanceModel.fromJson(
+      response.data,
+    );
+  }
+
+  Future<PunchResponseModel> managerEmployeePunch({
+    required int uid,
+    required String locationId,
+    required File punchImage,
+    String note = "Marked by manager",
+  }) async {
+    FormData formData = FormData.fromMap({
+      "uid": uid.toString(),
+      "location_id": locationId,
+      "note": note,
+      "punch_image": await MultipartFile.fromFile(
+        punchImage.path,
+      ),
+    });
+
+    final response = await apiClient.multipartPost(
+      ApiEndpoints.managerEmployeePunch,
       data: formData,
     );
 

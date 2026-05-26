@@ -3,23 +3,28 @@ import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_images.dart';
-import '../../../core/routes/app_routes.dart';
 import '../provider/attendance_provider.dart';
 
 class PendingFlowWidget extends StatelessWidget {
-  const PendingFlowWidget({super.key});
+  final VoidCallback? onRefresh;
+
+  const PendingFlowWidget({
+    super.key,
+    this.onRefresh,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 30,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.asset(
             AppImages.illustration,
             scale: 5,
-            //height: 200,
             fit: BoxFit.contain,
           ),
           const SizedBox(height: 40),
@@ -37,35 +42,44 @@ class PendingFlowWidget extends StatelessWidget {
             "We are currently reviewing your face verification. This usually takes a few hours. We'll notify you once it's done.",
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.black.withOpacity(0.6),
-              // Light grey feel on dark theme
+              color: Colors.black.withOpacity(
+                0.6,
+              ),
               fontSize: 15,
-              height: 1.5, // Better readability for multiline text
+              height: 1.5,
             ),
           ),
           const SizedBox(height: 50),
-          // Ek secondary "Got it" ya "Refresh" button bhi de sakte hain professional feel ke liye
           OutlinedButton(
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.primary),
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+              side: const BorderSide(
+                color: AppColors.primary,
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 40,
+                vertical: 12,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
             ),
             onPressed: () async {
+              /// SELF FLOW
+              if (onRefresh == null) {
+                final provider = context.read<AttendanceProvider>();
 
-              final provider =
-              context.read<AttendanceProvider>();
+                await provider.getFaceStatus();
 
-              await provider.getFaceStatus();
+                return;
+              }
+
+              /// MANAGER POPUP FLOW
+              onRefresh!.call();
             },
-            // onPressed: () {
-            //   //ye same screen hi reload hoga ok
-            //   Navigator.pushReplacementNamed(context, AppRoutes.faceAttendance);
-            // },
-            child: const Text("Refresh"),
+            child: const Text(
+              "Refresh",
+            ),
           ),
         ],
       ),

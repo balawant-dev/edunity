@@ -4,10 +4,13 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 // import 'package:face_verification/face_verification.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vibration/vibration.dart';
+import '../../../core/network/api_endpoints.dart';
 import '../../../core/routes/app_routes.dart';
 import '../model/faceImagesModel.dart';
 import '../model/face_registration_model.dart';
@@ -23,13 +26,34 @@ import 'package:path_provider/path_provider.dart';
 
 import '../service/face_recognition_service.dart';
 import '../widgets/success_attendance_dialog.dart';
-class AttendanceProvider extends ChangeNotifier {
+import 'package:image/image.dart' as img;
+import 'dart:math';
 
+class AttendanceProvider extends ChangeNotifier {
   final AttendanceRepo repo = AttendanceRepo();
+  final Random _random = Random();
 
   final ImagePicker picker = ImagePicker();
 
   bool isProcessingFrame = false;
+
+  bool isCapturing = false;
+
+  bool isLivenessPassed = false;
+
+  bool isFaceCentered = false;
+
+  bool isBrightnessGood = false;
+
+  bool isBlurGood = false;
+
+  bool isEyesOpen = false;
+
+  double latestBrightness = 0;
+
+  String livenessInstruction = "";
+
+  int livenessStep = 0;
 
   Timer? captureTimer;
 
@@ -43,6 +67,8 @@ class AttendanceProvider extends ChangeNotifier {
   FaceImagesModel? faceImagesModel;
   FaceRegistrationModel? faceRegistrationModel;
 
+  TodayAttendanceModel? managerTodayAttendanceModel;
+
   TodayAttendanceModel? todayAttendanceModel;
 
   PunchResponseModel? punchResponseModel;
@@ -52,6 +78,7 @@ class AttendanceProvider extends ChangeNotifier {
   List<CameraDescription> cameras = [];
 
   late FaceDetector faceDetector;
+
   ///Map section ka code hai
   GoogleMapController? mapController;
   StreamSubscription<Position>? positionStream;
@@ -66,31 +93,24 @@ class AttendanceProvider extends ChangeNotifier {
     required double officeLng,
     required double radius,
   }) async {
-
     try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
-      bool serviceEnabled =
-      await Geolocator.isLocationServiceEnabled();
-
-      if(!serviceEnabled){
+      if (!serviceEnabled) {
         return;
       }
 
-      LocationPermission permission =
-      await Geolocator.checkPermission();
+      LocationPermission permission = await Geolocator.checkPermission();
 
-      if(permission == LocationPermission.denied){
-
-        permission =
-        await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
       }
 
-      if(permission == LocationPermission.deniedForever){
+      if (permission == LocationPermission.deniedForever) {
         return;
       }
 
-      final position =
-      await Geolocator.getCurrentPosition(
+      final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.best,
         ),
@@ -101,39 +121,80 @@ class AttendanceProvider extends ChangeNotifier {
         position.longitude,
       );
 
-      distanceInMeter =
-          Geolocator.distanceBetween(
-            officeLat,
-            officeLng,
-            position.latitude,
-            position.longitude,
-          );
+      distanceInMeter = Geolocator.distanceBetween(
+        officeLat,
+        officeLng,
+        position.latitude,
+        position.longitude,
+      );
 
-      isInsideRadius =
-          distanceInMeter <= radius;
+      isInsideRadius = distanceInMeter <= radius;
 
       notifyListeners();
-
     } catch (e) {
-
       debugPrint(e.toString());
     }
   }
+
+  bool _stepHapticTriggered = false;
+
+  Future<void> triggerStepSuccessHaptic() async {
+    try {
+      if (_stepHapticTriggered) return;
+
+      _stepHapticTriggered = true;
+
+      HapticFeedback.lightImpact();
+
+      if (await Vibration.hasVibrator() ?? false) {
+        Vibration.vibrate(
+          duration: 70,
+          amplitude: 120,
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> triggerWarningHaptic() async {
+    try {
+      HapticFeedback.mediumImpact();
+
+      if (await Vibration.hasVibrator() ?? false) {
+        Vibration.vibrate(
+          duration: 140,
+          amplitude: 180,
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> triggerFinalSuccessHaptic() async {
+    try {
+      HapticFeedback.heavyImpact();
+
+      if (await Vibration.hasVibrator() ?? false) {
+        Vibration.vibrate(
+          pattern: [0, 90, 50, 140],
+        );
+      }
+    } catch (_) {}
+  }
+
+  void resetStepHaptic() {
+    _stepHapticTriggered = false;
+  }
+
   void startLiveTracking({
     required double officeLat,
     required double officeLng,
     required double radius,
   }) {
-
     Geolocator.getPositionStream(
-
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 5,//2
+        distanceFilter: 5, //2
       ),
-
     ).listen((position) async {
-
       currentLatLng = LatLng(
         position.latitude,
         position.longitude,
@@ -141,33 +202,24 @@ class AttendanceProvider extends ChangeNotifier {
 
       currentHeading = position.heading;
 
-      distanceInMeter =
-          Geolocator.distanceBetween(
-            officeLat,
-            officeLng,
-            position.latitude,
-            position.longitude,
-          );
+      distanceInMeter = Geolocator.distanceBetween(
+        officeLat,
+        officeLng,
+        position.latitude,
+        position.longitude,
+      );
 
-      isInsideRadius =
-          distanceInMeter <= radius;
+      isInsideRadius = distanceInMeter <= radius;
 
       /// AUTO CAMERA MOVE
 
-      if(mapController != null){
-
+      if (mapController != null) {
         mapController!.animateCamera(
-
           CameraUpdate.newCameraPosition(
-
             CameraPosition(
-
               target: currentLatLng!,
-
               zoom: 18,
-
               tilt: 45,
-
               bearing: currentHeading,
             ),
           ),
@@ -177,6 +229,7 @@ class AttendanceProvider extends ChangeNotifier {
       notifyListeners();
     });
   }
+
   ///Map section ka code hai End
 
   /// ============================================================
@@ -194,8 +247,10 @@ class AttendanceProvider extends ChangeNotifier {
   int captureCount = 0;
 
   bool isFaceValid = false;
-
-  bool isCapturing = false;
+  int _poseStableCount = 0;
+  void resetPoseStability() {
+    _poseStableCount = 0;
+  }
 
   String instructionText = "Align your face properly";
 
@@ -272,25 +327,15 @@ class AttendanceProvider extends ChangeNotifier {
       //   instructionText = "Face not matched";
       // }
 
-      final matched =
-      await verifyFaceAndPunch(
+      final matched = await verifyFaceAndPunch(
         context,
       );
 
       if (matched) {
-
-        await punchAttendance(
-          locationId: locationId,context: context
-        );
-
-
-
+        await punchAttendance(locationId: locationId, context: context);
       } else {
-
-        instructionText =
-        "Face not matched";
+        instructionText = "Face not matched";
       }
-
     } catch (e) {
       instructionText = "Error during punch";
     } finally {
@@ -300,6 +345,169 @@ class AttendanceProvider extends ChangeNotifier {
   }
 
   String getCurrentAngleInstruction() => angleInstructions[currentAngleIndex];
+
+  void generateLivenessChallenge() {
+    livenessStep = _random.nextInt(3);
+
+    switch (livenessStep) {
+      case 0:
+        livenessInstruction = "Blink both eyes";
+        break;
+
+      case 1:
+        livenessInstruction = "Turn face left";
+        break;
+
+      case 2:
+        livenessInstruction = "Turn face right";
+        break;
+    }
+
+    notifyListeners();
+  }
+
+  bool validateFaceEnterprise(
+    Face face,
+    img.Image image,
+  ) {
+    final yaw = face.headEulerAngleY ?? 0;
+    final pitch = face.headEulerAngleX ?? 0;
+
+    final width = face.boundingBox.width;
+    final height = face.boundingBox.height;
+
+    final leftEye = face.leftEyeOpenProbability ?? 0;
+    final rightEye = face.rightEyeOpenProbability ?? 0;
+
+    if (width < 140 || height < 140) {
+      instructionText = "Move closer";
+      return false;
+    }
+
+    /// SMART ANGLE QUALITY
+    switch (currentAngleIndex) {
+      /// Straight
+      case 0:
+        if (yaw.abs() > 15 || pitch.abs() > 15) {
+          instructionText = "Keep face straight";
+          return false;
+        }
+        break;
+
+      /// Left
+      case 1:
+        if (yaw < 10) {
+          instructionText = "Turn face left";
+          return false;
+        }
+        break;
+
+      /// Right
+      case 2:
+        if (yaw > -10) {
+          instructionText = "Turn face right";
+          return false;
+        }
+        break;
+
+      /// Up
+      case 3:
+        if (pitch < 6) {
+          instructionText = "Lift chin slightly";
+          return false;
+        }
+        break;
+
+      /// Down
+      case 4:
+        if (pitch > -6) {
+          instructionText = "Lower chin slightly";
+          return false;
+        }
+        break;
+    }
+
+    if (leftEye < 0.30 || rightEye < 0.30) {
+      instructionText = "Keep eyes open";
+      return false;
+    }
+
+    final centerX = face.boundingBox.center.dx;
+    final imageCenter = image.width / 2;
+
+    if ((centerX - imageCenter).abs() > 110) {
+      instructionText = "Center your face";
+      return false;
+    }
+
+    return true;
+  }
+
+  double calculateBrightness(
+    img.Image image,
+  ) {
+    double total = 0;
+
+    for (int y = 0; y < image.height; y += 4) {
+      for (int x = 0; x < image.width; x += 4) {
+        final p = image.getPixel(x, y);
+
+        total += (0.299 * p.r) + (0.587 * p.g) + (0.114 * p.b);
+      }
+    }
+
+    final brightness = total / ((image.width / 4) * (image.height / 4));
+
+    latestBrightness = brightness;
+
+    return brightness;
+  }
+
+  bool validateBrightness(
+    double value,
+  ) {
+    if (value < 65) {
+      instructionText = "Too dark";
+      return false;
+    }
+
+    if (value > 250) {
+      instructionText = "Too bright";
+      return false;
+    }
+
+    return true;
+  }
+
+  bool validateBlur(
+    img.Image image,
+  ) {
+    double diff = 0;
+
+    for (int y = 1; y < image.height - 1; y += 5) {
+      for (int x = 1; x < image.width - 1; x += 5) {
+        final p1 = image.getPixel(
+          x,
+          y,
+        );
+
+        final p2 = image.getPixel(
+          x + 1,
+          y,
+        );
+
+        diff += (p1.r - p2.r).abs();
+      }
+    }
+
+    if (diff < 50000) {
+      instructionText = "Image blurry";
+      return false;
+    }
+
+    return true;
+  }
+
   /// ============================================================
   /// INIT
   /// ============================================================
@@ -325,21 +533,44 @@ class AttendanceProvider extends ChangeNotifier {
   /// CAMERA
   /// ============================================================
 
+  // Future<void> initCamera() async {
+  //   cameras = await availableCameras();
+  //   final frontCamera = cameras.firstWhere(
+  //     (camera) => camera.lensDirection == CameraLensDirection.front,
+  //   );
+  //
+  //   cameraController = CameraController(
+  //     frontCamera,
+  //     ResolutionPreset.high,
+  //     enableAudio: false,
+  //     imageFormatGroup: ImageFormatGroup.yuv420,
+  //   );
+  //
+  //   await cameraController?.initialize();
+  //   await cameraController?.setFlashMode(FlashMode.off);
+  //   notifyListeners();
+  // }
+
   Future<void> initCamera() async {
     cameras = await availableCameras();
-    final frontCamera = cameras.firstWhere(
-          (camera) => camera.lensDirection == CameraLensDirection.front,
+
+    final front = cameras.firstWhere(
+      (e) => e.lensDirection == CameraLensDirection.front,
     );
 
     cameraController = CameraController(
-      frontCamera,
-      ResolutionPreset.high,
+      front,
+      ResolutionPreset.veryHigh,
       enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.yuv420,
+      imageFormatGroup: ImageFormatGroup.jpeg,
     );
 
-    await cameraController?.initialize();
-    await cameraController?.setFlashMode(FlashMode.off);
+    await cameraController!.initialize();
+
+    await cameraController!.setFlashMode(
+      FlashMode.off,
+    );
+
     notifyListeners();
   }
 
@@ -357,7 +588,8 @@ class AttendanceProvider extends ChangeNotifier {
 
   Future<void> startAutoCapture() async {
     if (primaryImage == null) {
-      instructionText = "Please select primary image first";
+      instructionText = "Select primary image";
+
       notifyListeners();
       return;
     }
@@ -365,82 +597,100 @@ class AttendanceProvider extends ChangeNotifier {
     if (isCapturing) return;
 
     isCapturing = true;
+
     captureCount = 0;
+
     currentAngleIndex = 0;
+
     croppedFaceImages.clear();
+
+    instructionText = getCurrentAngleInstruction();
 
     notifyListeners();
 
     captureTimer?.cancel();
-    captureTimer = Timer.periodic(const Duration(milliseconds: 220), (timer) async {  // Faster
-      if (captureCount >= 5) {
-        timer.cancel();
-        isCapturing = false;
-        notifyListeners();
-        await registerFace();
-        return;
-      }
 
-      if (isProcessingFrame) return;
-      isProcessingFrame = true;
-      await captureAndValidateFace();
-      isProcessingFrame = false;
-    });
+    captureTimer = Timer.periodic(
+      const Duration(
+        milliseconds: 350,
+      ),
+      (timer) async {
+        if (isProcessingFrame) {
+          return;
+        }
+
+        if (captureCount >= 5) {
+          timer.cancel();
+
+          isCapturing = false;
+
+          await triggerFinalSuccessHaptic();
+
+          notifyListeners();
+
+          /// SELF / MANAGER SWITCH
+          if (isManagerFlow) {
+            debugPrint(
+              "MANAGER FLOW REGISTER",
+            );
+
+            return;
+          }
+
+          debugPrint(
+            "SELF FLOW REGISTER",
+          );
+
+          await registerFace();
+
+          return;
+        }
+
+        isProcessingFrame = true;
+
+        await captureAndValidateFace();
+
+        isProcessingFrame = false;
+      },
+    );
   }
 
   Future<void> capturePrimaryImage() async {
-
     try {
-
-      /// image_picker camera open karega
-      /// user manually click karega
-
       final XFile? image = await picker.pickImage(
-
         source: ImageSource.camera,
-
         imageQuality: 85,
-
-        preferredCameraDevice:
-        CameraDevice.front,
+        preferredCameraDevice: CameraDevice.front,
       );
 
       if (image != null) {
-
         primaryImage = File(image.path);
 
         notifyListeners();
       }
-
     } catch (e) {
-
       debugPrint(
         "PRIMARY CAMERA ERROR : $e",
       );
     }
   }
+
   /// ============================================================
   /// PICK PRIMARY IMAGE FROM GALLERY
   /// ============================================================
 
   Future<void> pickPrimaryImageFromGallery() async {
-
     try {
-
       final XFile? image = await picker.pickImage(
-
         source: ImageSource.gallery,
       );
 
       if (image != null) {
-
         primaryImage = File(image.path);
 
         notifyListeners();
       }
-
     } catch (e) {
-
       debugPrint("PRIMARY GALLERY ERROR : $e");
     }
   }
@@ -450,36 +700,30 @@ class AttendanceProvider extends ChangeNotifier {
   /// ============================================================
 
   Future<void> getFaceStatus() async {
-
     try {
-
       isLoading = true;
 
       notifyListeners();
 
       faceStatusModel = await repo.getFaceStatus();
-
     } catch (e) {
-
       debugPrint("FACE STATUS ERROR : $e");
     }
 
     isLoading = false;
 
     notifyListeners();
-  }  Future<void> getFaceImages() async {
+  }
 
+  Future<void> getFaceImages() async {
     try {
-
       // isLoading = true;
 
       notifyListeners();
 
       faceImagesModel = await repo.getFaceImages();
       print(faceImagesModel!.primaryImages);
-
     } catch (e) {
-
       debugPrint("FACE STATUS ERROR : $e");
     }
 
@@ -493,18 +737,13 @@ class AttendanceProvider extends ChangeNotifier {
   /// ============================================================
 
   Future<void> getTodayAttendance() async {
-
     try {
-
       isLoading = true;
 
       notifyListeners();
 
-      todayAttendanceModel =
-      await repo.getTodayAttendance();
-
+      todayAttendanceModel = await repo.getTodayAttendance();
     } catch (e) {
-
       debugPrint("TODAY ATTENDANCE ERROR : $e");
     }
 
@@ -512,7 +751,6 @@ class AttendanceProvider extends ChangeNotifier {
 
     notifyListeners();
   }
-
 
   /// ============================================================
   /// CAPTURE FACE
@@ -524,131 +762,231 @@ class AttendanceProvider extends ChangeNotifier {
 
   Future<void> captureAndValidateFace() async {
     try {
-      if (cameraController == null || !cameraController!.value.isInitialized) return;
+      if (cameraController == null ||
+          !cameraController!.value.isInitialized ||
+          cameraController!.value.isTakingPicture) {
+        return;
+      }
 
       final XFile image = await cameraController!.takePicture();
-      final file = File(image.path);
-      final inputImage = InputImage.fromFile(file);
 
-      final faces = await faceDetector.processImage(inputImage);
+      final file = File(image.path);
+
+      final bytes = await file.readAsBytes();
+
+      final decoded = img.decodeImage(bytes);
+
+      if (decoded == null) {
+        instructionText = "Image error";
+
+        notifyListeners();
+        return;
+      }
+
+      /// =======================
+      /// BRIGHTNESS
+      /// =======================
+
+      final brightness = calculateBrightness(
+        decoded,
+      );
+
+      if (!validateBrightness(
+        brightness,
+      )) {
+        isFaceValid = false;
+        notifyListeners();
+        return;
+      }
+
+      /// =======================
+      /// BLUR
+      /// =======================
+
+      if (!validateBlur(
+        decoded,
+      )) {
+        isFaceValid = false;
+        notifyListeners();
+        return;
+      }
+
+      /// =======================
+      /// FACE DETECT
+      /// =======================
+
+      final input = InputImage.fromFile(
+        file,
+      );
+
+      final faces = await faceDetector.processImage(
+        input,
+      );
 
       if (faces.isEmpty) {
         instructionText = "Face not detected";
+
+        isFaceValid = false;
+
+        notifyListeners();
+        return;
+      }
+
+      if (faces.length > 1) {
+        instructionText = "Only one face";
+
+        isFaceValid = false;
+
+        notifyListeners();
+        return;
+      }
+
+      final face = faces.first;
+
+      /// =======================
+      /// ENTERPRISE QUALITY
+      /// =======================
+
+      final valid = validateFaceEnterprise(
+        face,
+        decoded,
+      );
+
+      if (!valid) {
         isFaceValid = false;
         notifyListeners();
         return;
       }
 
-      // if (faces.length > 1) {
-      //   instructionText = "Only one face allowed";
-      //   isFaceValid = false;
-      //   notifyListeners();
-      //   return;
-      // }
+      /// =======================
+      /// ANGLE VALIDATION
+      /// =======================
 
-      // Remove tiny false detections
-      final validFaces = faces.where((f) {
-        return f.boundingBox.width > 80 &&
-            f.boundingBox.height > 80;
-      }).toList();
+      final yaw = face.headEulerAngleY ?? 0;
 
-      if (validFaces.length > 1) {
-        instructionText = "Only one face allowed";
-        isFaceValid = false;
-        notifyListeners();
-        return;
-      }
-
-      if (validFaces.isEmpty) {
-        instructionText = "Face not detected";
-        isFaceValid = false;
-        notifyListeners();
-        return;
-      }
-
-      final face = validFaces.first;
-
-      // final face = faces.first;
-      final headY = face.headEulerAngleY ?? 0;   // Yaw (Left-Right)
-      final headX = face.headEulerAngleX ?? 0;   // Pitch (Up-Down)
-      final faceWidth = face.boundingBox.width;
-
-      // Basic Validation
-      if (faceWidth < 95) {
-        instructionText = "Move closer to camera";
-        isFaceValid = false;
-        notifyListeners();
-        return;
-      }
-
-      // Allow head movement for Up/Down angles
-      if (currentAngleIndex <= 2 && headX.abs() > 18) {
-        instructionText = "Keep your head straight";
-        isFaceValid = false;
-        notifyListeners();
-        return;
-      }
-
-      // if (headX.abs() > 18) {
-      //   instructionText = "Keep your head straight (no tilt)";
-      //   isFaceValid = false;
-      //   notifyListeners();
-      //   return;
-      // }
-
-      // === MIRROR FIX - Inverted Logic for Left/Right ===
-      bool isGoodAngle = false;
+      final pitch = face.headEulerAngleX ?? 0;
+      bool goodAngle = false;
 
       switch (currentAngleIndex) {
-        case 0: // Straight
-          isGoodAngle = headY.abs() < 9;
-          break;
-        case 1: // Slowly Turn Left → Because of mirror, we check positive Y
-          isGoodAngle = headY > 13;
-          break;
-        case 2: // Slowly Turn Right
-          isGoodAngle = headY < -13;
-          break;
-        case 3: // Up
-          isGoodAngle = headX < -7;
+        /// Straight
+        case 0:
+          goodAngle = yaw.abs() < 12;
           break;
 
-        case 4: // Down
-          isGoodAngle = headX > 7;
+        /// Left
+        case 1:
+          goodAngle = yaw > 8;
+          break;
+
+        /// Right
+        case 2:
+          goodAngle = yaw < -8;
+          break;
+
+        /// Up
+        case 3:
+          goodAngle = pitch > 5;
+          break;
+
+        /// Down
+        case 4:
+          goodAngle = pitch < -5;
           break;
       }
 
-      if (!isGoodAngle) {
+      if (!goodAngle) {
+        resetPoseStability();
+
         instructionText = getCurrentAngleInstruction();
+
         isFaceValid = false;
+
         notifyListeners();
         return;
       }
 
-      // SUCCESS
-      instructionText = "Perfect! Hold...";
+      /// ENTERPRISE STABILITY
+      _poseStableCount++;
+
+      if (_poseStableCount < 2) {
+        instructionText = "Hold ${getCurrentAngleInstruction()}";
+
+        notifyListeners();
+        return;
+      }
+
+      resetPoseStability();
+      //
+      // bool goodAngle = false;
+      //
+      // switch (currentAngleIndex) {
+      //   case 0:
+      //     goodAngle = yaw.abs() < 8;
+      //     break;
+      //
+      //   case 1:
+      //     goodAngle = yaw > 8;
+      //     break;
+      //
+      //   case 2:
+      //     goodAngle = yaw < -8;
+      //     break;
+      //   case 3:
+      //     goodAngle = pitch > 5;
+      //     break;
+      //
+      //   case 4:
+      //     goodAngle = pitch < -5;
+      //     break;
+      // }
+      //
+      // if (!goodAngle) {
+      //   instructionText = getCurrentAngleInstruction();
+      //
+      //   isFaceValid = false;
+      //
+      //   notifyListeners();
+      //   return;
+      // }
+
+      /// =======================
+      /// SUCCESS
+      /// =======================
+
       isFaceValid = true;
-      captureCount++;
-      croppedFaceImages.add(file);
+
+      await triggerStepSuccessHaptic();
+
+      instructionText = "${getCurrentAngleInstruction()} Done ✓";
+
+      /// Avoid duplicates
+      if (croppedFaceImages.length < 5) {
+        croppedFaceImages.add(file);
+
+        captureCount++;
+      }
 
       if (captureCount < 5) {
         currentAngleIndex++;
+
+        resetPoseStability();
+        resetStepHaptic();
+
         instructionText = getCurrentAngleInstruction();
       }
 
       notifyListeners();
-
     } catch (e) {
-      debugPrint("FACE CAPTURE ERROR: $e");
+      debugPrint(
+        "REGISTER CAPTURE ERROR => $e",
+      );
     }
   }
-
-
 
   /// ============================================================
   /// REGISTER FACE
   /// ============================================================
-///api
+  ///api
   // Future<void> registerFace() async {
   //
   //   try {
@@ -702,129 +1040,112 @@ class AttendanceProvider extends ChangeNotifier {
   //   notifyListeners();
   // }
   Future<void> registerFaceSingleImage() async {
-
     try {
-
       if (primaryImage == null) return;
 
       isRegistering = true;
 
-      instructionText =
-      "Processing face...";
+      instructionText = "Processing face...";
 
       notifyListeners();
 
-      final inputImage =
-      InputImage.fromFile(
+      final inputImage = InputImage.fromFile(
         primaryImage!,
       );
 
-      final faces =
-      await faceDetector.processImage(
+      final faces = await faceDetector.processImage(
         inputImage,
       );
 
       if (faces.isEmpty) {
-
-        instructionText =
-        "No face detected";
+        instructionText = "No face detected";
 
         return;
       }
 
       if (faces.length > 1) {
-
-        instructionText =
-        "Only one face allowed";
+        instructionText = "Only one face allowed";
 
         return;
       }
 
       final face = faces.first;
 
-      final valid =
-      validateFaceQuality(face);
+      final valid = validateFaceQuality(face);
 
       if (!valid) {
         return;
       }
 
-      instructionText =
-      "Extracting features...";
+      instructionText = "Extracting features...";
 
       notifyListeners();
 
-      final embedding =
-      await FaceRecognitionService.instance
-          .extractEmbedding(
+      final embedding = await FaceRecognitionService.instance.extractEmbedding(
         primaryImage!,
         face,
       );
 
-      await FaceRecognitionService.instance
-          .saveSingleEmbedding(
-        embedding,
-      );
+      // await FaceRecognitionService.instance.saveSingleEmbedding(
+      //   embedding,
+      // );
 
-      instructionText =
-      "Uploading registration...";
+      instructionText = "Uploading registration...";
 
       notifyListeners();
 
-      faceRegistrationModel =
-      await repo.registerFace(
-
+      faceRegistrationModel = await repo.registerFace(
         primaryImages: [primaryImage!],
-
         images: [primaryImage!],
       );
 
-      instructionText =
-      "Face registered successfully";
+      instructionText = "Face registered successfully";
 
       await getFaceStatus();
 
       resetFaceScanner();
-
     } catch (e) {
-
       debugPrint(
         "REGISTER ERROR => $e",
       );
 
-      instructionText =
-      "Registration failed";
-
+      instructionText = "Registration failed";
     } finally {
-
       isRegistering = false;
 
       notifyListeners();
     }
   }
 
-  bool validateFaceQuality(Face face) {
+  bool validateFaceQuality(
+    Face face,
+  ) {
+    final width = face.boundingBox.width;
 
-    final headX =
-        face.headEulerAngleX ?? 0;
+    final height = face.boundingBox.height;
 
-    final headY =
-        face.headEulerAngleY ?? 0;
+    final yaw = face.headEulerAngleY ?? 0;
 
-    final width =
-        face.boundingBox.width;
+    final pitch = face.headEulerAngleX ?? 0;
 
-    if (width < 120) {
-      instructionText =
-      "Move closer to camera";
+    final left = face.leftEyeOpenProbability ?? 0;
+
+    final right = face.rightEyeOpenProbability ?? 0;
+
+    if (width < 140 || height < 140) {
+      instructionText = "Move closer";
+
       return false;
     }
 
-    if (headX.abs() > 18 ||
-        headY.abs() > 18) {
+    if (yaw.abs() > 15 || pitch.abs() > 15) {
+      instructionText = "Keep face straight";
 
-      instructionText =
-      "Keep face straight";
+      return false;
+    }
+
+    if (left < 0.40 || right < 0.40) {
+      instructionText = "Keep eyes open";
 
       return false;
     }
@@ -835,116 +1156,129 @@ class AttendanceProvider extends ChangeNotifier {
   ///below okay for multiple image
 
   Future<void> registerFace() async {
-
     try {
+      if (primaryImage == null) {
+        return;
+      }
 
-      if (primaryImage == null) return;
-
-      isRegistering = true;
-
-      notifyListeners();
-
-      /// =========================================
-      /// FACE DETECT
-      /// =========================================
-
-      final inputImage =
-      InputImage.fromFile(primaryImage!);
-
-      final faces =
-      await faceDetector.processImage(
-        inputImage,
-      );
-
-
-      faceRegistrationModel =
-          await repo.registerFace(
-
-            primaryImages: [primaryImage!],
-
-            images: croppedFaceImages,
-          );
-
-      if (faces.isEmpty) {
-
-        instructionText =
-        "No face detected";
+      if (croppedFaceImages.isEmpty) {
+        instructionText = "Capture face angles";
 
         return;
       }
 
-      /// =========================================
+      isRegistering = true;
+
+      instructionText = "Preparing registration...";
+
+      notifyListeners();
+
+      final input = InputImage.fromFile(
+        primaryImage!,
+      );
+
+      final faces = await faceDetector.processImage(input);
+
+      if (faces.isEmpty) {
+        instructionText = "No face found";
+
+        return;
+      }
+
+      final primaryFace = faces.first;
+
+      /// =======================
       /// MULTI EMBEDDINGS
-      /// =========================================
+      /// =======================
 
       List<List<double>> embeddings = [];
 
-      /// Primary image embedding
+      instructionText = "Building face profile...";
+
+      notifyListeners();
+
+      /// PRIMARY
 
       final primaryEmbedding =
-      await FaceRecognitionService.instance
-          .extractEmbedding(
+          await FaceRecognitionService.instance.extractEmbedding(
         primaryImage!,
-        faces.first,
+        primaryFace,
       );
 
-      embeddings.add(primaryEmbedding);
+      embeddings.add(
+        primaryEmbedding,
+      );
 
-      /// Angle images embeddings
+      /// ANGLES
 
       for (final image in croppedFaceImages) {
-
-        final input =
-        InputImage.fromFile(image);
-
-        final detected =
-        await faceDetector.processImage(
-          input,
+        final inputImage = InputImage.fromFile(
+          image,
         );
 
-        if (detected.isEmpty) continue;
+        final detected = await faceDetector.processImage(
+          inputImage,
+        );
 
-        final emb =
-        await FaceRecognitionService.instance
-            .extractEmbedding(
+        if (detected.isEmpty) {
+          continue;
+        }
+
+        final emb = await FaceRecognitionService.instance.extractEmbedding(
           image,
           detected.first,
         );
 
-        embeddings.add(emb);
+        embeddings.add(
+          emb,
+        );
       }
 
-      /// =========================================
-      /// AVERAGE EMBEDDING
-      /// =========================================
+      if (embeddings.length < 3) {
+        instructionText = "Poor registration quality";
 
-      await FaceRecognitionService.instance
-          .saveEmbeddings(embeddings);
+        return;
+      }
 
-      ///uncomment above
-      instructionText =
-      "Face registered successfully";
+      /// SAVE LOCAL
+
+      await FaceRecognitionService.instance.saveEmbeddings(
+        embeddings,
+      );
+
+      instructionText = "Uploading registration...";
+
+      notifyListeners();
+
+      /// SERVER
+
+      faceRegistrationModel = await repo.registerFace(
+        primaryImages: [
+          primaryImage!,
+        ],
+        images: croppedFaceImages,
+      );
+
+      instructionText = "Registration successful";
+
+      notifyListeners();
 
       await getFaceStatus();
 
       resetFaceScanner();
-
     } catch (e) {
-
       debugPrint(
         "REGISTER ERROR => $e",
       );
 
-      instructionText =
-      "Registration failed";
-
+      instructionText = "Registration failed";
     } finally {
-
       isRegistering = false;
 
       notifyListeners();
     }
   }
+
   /// ============================================================
   /// PUNCH IMAGE
   /// ============================================================
@@ -956,122 +1290,104 @@ class AttendanceProvider extends ChangeNotifier {
   /// FAST PUNCH IMAGE CAPTURE (Single Good Image)
   /// ============================================================
   Future<bool> capturePunchImage() async {
-
-    if (cameraController == null) {
-      return false;
-    }
-
-    /// Prevent duplicate capture
-    if (isProcessingFrame ||
-        cameraController!.value.isTakingPicture ||
-        !cameraController!.value.isInitialized) {
-      return false;
-    }
-
     try {
+      if (cameraController == null ||
+          !cameraController!.value.isInitialized ||
+          cameraController!.value.isTakingPicture) {
+        return false;
+      }
 
-      isProcessingFrame = true;
-
-      instructionText = "Scanning face...";
       isFaceValid = false;
-
+      instructionText = "Align your face";
       notifyListeners();
 
-      await Future.delayed(
-        const Duration(milliseconds: 150),
-      );
+      int attempts = 0;
+      const maxAttempts = 6;
 
-      /// SAFE CAPTURE
-      final XFile image =
-      await cameraController!.takePicture();
+      while (attempts < maxAttempts) {
+        attempts++;
 
-      final file = File(image.path);
+        final XFile image = await cameraController!.takePicture();
 
-      final inputImage =
-      InputImage.fromFile(file);
+        final file = File(image.path);
 
-      final faces =
-      await faceDetector.processImage(
-        inputImage,
-      );
+        final bytes = await file.readAsBytes();
 
-      if (faces.isEmpty) {
+        final decoded = img.decodeImage(bytes);
 
-        instructionText = "Face not detected";
+        if (decoded == null) {
+          continue;
+        }
+
+        final brightness = calculateBrightness(decoded);
+
+        if (!validateBrightness(brightness)) {
+          await Future.delayed(
+            const Duration(milliseconds: 150),
+          );
+          continue;
+        }
+
+        if (!validateBlur(decoded)) {
+          await Future.delayed(
+            const Duration(milliseconds: 150),
+          );
+          continue;
+        }
+
+        final input = InputImage.fromFile(file);
+
+        final faces = await faceDetector.processImage(input);
+
+        if (faces.isEmpty) {
+          instructionText = "Face not detected";
+          notifyListeners();
+          continue;
+        }
+
+        if (faces.length > 1) {
+          instructionText = "Only one face";
+          notifyListeners();
+          continue;
+        }
+
+        final face = faces.first;
+
+        final valid = validateFaceEnterprise(
+          face,
+          decoded,
+        );
+
+        if (!valid) {
+          notifyListeners();
+          continue;
+        }
+
+        /// ONE GOOD IMAGE
+        punchImage = file;
+
+        isFaceValid = true;
+
+        instructionText = "Face captured";
 
         notifyListeners();
 
-        return false;
+        return true;
       }
 
-      if (faces.length > 1) {
+      instructionText = "Could not capture face";
 
-        instructionText = "Only one face allowed";
-
-        notifyListeners();
-
-        return false;
-      }
-
-      final face = faces.first;
-
-      final headX =
-          face.headEulerAngleX ?? 0;
-
-      final headY =
-          face.headEulerAngleY ?? 0;
-
-      final faceWidth =
-          face.boundingBox.width;
-
-      if (faceWidth < 80) {
-
-        instructionText = "Move closer";
-
-        notifyListeners();
-
-        return false;
-      }
-
-      /// Relaxed angles
-      if (headX.abs() > 20 ||
-          headY.abs() > 20) {
-
-        instructionText =
-        "Keep face straight";
-
-        notifyListeners();
-
-        return false;
-      }
-
-      punchImage = file;
-
-      isFaceValid = true;
-
-      instructionText =
-      "Face detected";
-
-      notifyListeners();
-
-      return true;
-
+      return false;
     } catch (e) {
-
       debugPrint(
         "PUNCH ERROR => $e",
       );
 
       return false;
-
-    } finally {
-
-      /// ALWAYS RESET
-      isProcessingFrame = false;
-
-      notifyListeners();
     }
   }
+
+  ///
   // Future<bool> capturePunchImage() async {
   //   try {
   //     if (cameraController == null || !cameraController!.value.isInitialized) {
@@ -1314,7 +1630,6 @@ class AttendanceProvider extends ChangeNotifier {
   //   }
   // }
 
-
   /// ============================================================
   /// PUNCH ATTENDANCE
   /// ============================================================
@@ -1323,50 +1638,43 @@ class AttendanceProvider extends ChangeNotifier {
     required String locationId,
     required BuildContext context,
   }) async {
-
     try {
-
       if (punchImage == null) return;
 
       // isPunchLoading = true;
 
       notifyListeners();
 
-      final userType =
-          todayAttendanceModel?.userType ?? "";
+      final userType = todayAttendanceModel?.userType ?? "";
 
       if (userType == "employee") {
-
-        punchResponseModel =
-        await repo.employeePunch(
-
+        punchResponseModel = await repo.employeePunch(
           locationId: locationId,
-
           punchImage: punchImage!,
         );
-
       } else {
-
-        punchResponseModel =
-        await repo.studentPunch(
-
+        punchResponseModel = await repo.studentPunch(
           locationId: locationId,
-
           punchImage: punchImage!,
         );
       }
+      final summary = todayAttendanceModel?.attendanceSummary;
+
+      final isPunchIn = summary?.timeline == null ||
+          summary!.timeline.isEmpty ||
+          summary.timeline.last.type != "In";
+
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) {
           return AttendanceSuccessPopup(
+            isPunchIn: isPunchIn,
             onHomeTap: () {
-
               Navigator.pushReplacementNamed(
                 context,
                 AppRoutes.home,
               );
-
             },
           );
         },
@@ -1382,9 +1690,7 @@ class AttendanceProvider extends ChangeNotifier {
 
       // ✅ RESET UI HERE
       resetFaceScanner();
-
     } catch (e) {
-
       debugPrint("PUNCH dfsdfERROR : $e");
     }
 
@@ -1475,84 +1781,7 @@ class AttendanceProvider extends ChangeNotifier {
   //   }
   // }
 
-
-  Future<bool> verifyFaceAndPunch(
-      BuildContext context,
-      ) async {
-
-    try {
-
-      isPunchLoading = true;
-
-      instructionText =
-      "Scanning face...";
-
-      notifyListeners();
-
-      final captured =
-      await capturePunchImage();
-
-      if (!captured ||
-          punchImage == null) {
-
-        return false;
-      }
-
-      final inputImage =
-      InputImage.fromFile(
-        punchImage!,
-      );
-
-      final faces =
-      await faceDetector.processImage(
-        inputImage,
-      );
-
-      if (faces.isEmpty) {
-        return false;
-      }
-
-      final embedding =
-      await FaceRecognitionService.instance
-          .extractEmbedding(
-        punchImage!,
-        faces.first,
-      );
-
-      final matched =
-      await FaceRecognitionService.instance
-          .verifyFace(
-        embedding,
-      );
-
-      if (!matched) {
-
-        instructionText =
-        "Face not matched";
-
-        return false;
-      }
-
-      instructionText =
-      "Face matched";
-
-      return true;
-
-    } catch (e) {
-
-      instructionText =
-      "Verification failed";
-
-      return false;
-
-    } finally {
-
-      isPunchLoading = false;
-
-      notifyListeners();
-    }
-  }
-///fjhdfjals Thikm hai below
+  ///forSingle
 //   Future<bool> verifyFaceAndPunch(
 //       BuildContext context,
 //       ) async {
@@ -1566,21 +1795,14 @@ class AttendanceProvider extends ChangeNotifier {
 //
 //       notifyListeners();
 //
-//
 //       final captured =
 //       await capturePunchImage();
 //
-//       if (!captured || punchImage == null) {
-//
-//         instructionText =
-//         "Face capture failed";
+//       if (!captured ||
+//           punchImage == null) {
 //
 //         return false;
 //       }
-//
-//       /// =========================================
-//       /// DETECT FACE
-//       /// =========================================
 //
 //       final inputImage =
 //       InputImage.fromFile(
@@ -1593,37 +1815,20 @@ class AttendanceProvider extends ChangeNotifier {
 //       );
 //
 //       if (faces.isEmpty) {
-//
-//         instructionText =
-//         "No face detected";
-//
 //         return false;
 //       }
 //
-//       /// =========================================
-//       /// GENERATE EMBEDDING
-//       /// =========================================
-//
-//       instructionText =
-//       "Matching face...";
-//
-//       notifyListeners();
-//
-//       final currentEmbedding =
+//       final embedding =
 //       await FaceRecognitionService.instance
 //           .extractEmbedding(
 //         punchImage!,
 //         faces.first,
 //       );
 //
-//       /// =========================================
-//       /// VERIFY
-//       /// =========================================
-//
 //       final matched =
 //       await FaceRecognitionService.instance
 //           .verifyFace(
-//         currentEmbedding,
+//         embedding,
 //       );
 //
 //       if (!matched) {
@@ -1635,45 +1840,11 @@ class AttendanceProvider extends ChangeNotifier {
 //       }
 //
 //       instructionText =
-//       "Face matched successfully";
-//
-//       notifyListeners();
-//
-//       /// =========================================
-//       /// SUCCESS DIALOG
-//       /// =========================================
-//       if (matched) {
-//
-//         WidgetsBinding.instance.addPostFrameCallback((_) {
-//
-//           if (context.mounted) {
-//
-//             showDialog(
-//               context: context,
-//               barrierDismissible: false,
-//               builder: (_) => SuccessAttendanceDialog(
-//                 onHomePressed: () {
-//
-//                   Navigator.of(
-//                     context,
-//                     rootNavigator: true,
-//                   ).pushReplacementNamed(
-//                     AppRoutes.home,
-//                   );
-//                 },
-//               ),
-//             );
-//           }
-//         });
-//       }
+//       "Face matched";
 //
 //       return true;
 //
 //     } catch (e) {
-//
-//       debugPrint(
-//         "VERIFY ERROR => $e",
-//       );
 //
 //       instructionText =
 //       "Verification failed";
@@ -1687,6 +1858,143 @@ class AttendanceProvider extends ChangeNotifier {
 //       notifyListeners();
 //     }
 //   }
+  ///fjhdfjals Thikm hai below
+  Future<bool> verifyFaceAndPunch(
+    BuildContext context,
+  ) async {
+    try {
+      isPunchLoading = true;
+
+      instructionText = "Preparing verification...";
+
+      notifyListeners();
+
+      /// ===========================
+      /// CAPTURE
+      /// ===========================
+
+      final captured = await capturePunchImage();
+
+      if (!captured || punchImage == null) {
+        instructionText = "Face capture failed";
+
+        return false;
+      }
+
+      /// ===========================
+      /// LIVENESS
+      /// ===========================
+
+      instructionText = "Analyzing face...";
+
+      notifyListeners();
+
+      /// ===========================
+      /// DETECT FACE
+      /// ===========================
+
+      final input = InputImage.fromFile(
+        punchImage!,
+      );
+
+      final faces = await faceDetector.processImage(
+        input,
+      );
+
+      if (faces.isEmpty) {
+        instructionText = "No face detected";
+
+        return false;
+      }
+
+      if (faces.length > 1) {
+        instructionText = "Multiple faces detected";
+
+        return false;
+      }
+
+      final face = faces.first;
+
+      /// ===========================
+      /// FINAL QUALITY CHECK
+      /// ===========================
+
+      final bytes = await punchImage!.readAsBytes();
+
+      final decoded = img.decodeImage(
+        bytes,
+      );
+
+      if (decoded == null) {
+        instructionText = "Image error";
+
+        return false;
+      }
+
+      final valid = validateFaceEnterprise(
+        face,
+        decoded,
+      );
+
+      if (!valid) {
+        instructionText = "Poor face quality";
+
+        return false;
+      }
+
+      /// ===========================
+      /// EMBEDDING
+      /// ===========================
+
+      instructionText = "Matching face...";
+
+      notifyListeners();
+
+      final currentEmbedding =
+          await FaceRecognitionService.instance.extractEmbedding(
+        punchImage!,
+        face,
+      );
+
+      /// ===========================
+      /// VERIFY
+      /// ===========================
+
+      final matched = await FaceRecognitionService.instance.verifyFace(
+        currentEmbedding,
+      );
+
+      if (!matched) {
+        instructionText = "Face not matched";
+
+        notifyListeners();
+
+        return false;
+      }
+
+      /// ===========================
+      /// SUCCESS
+      /// ===========================
+
+      instructionText = "Face verified";
+
+      notifyListeners();
+
+      return true;
+    } catch (e) {
+      debugPrint(
+        "VERIFY ERROR => $e",
+      );
+
+      instructionText = "Verification failed";
+
+      return false;
+    } finally {
+      isPunchLoading = false;
+
+      notifyListeners();
+    }
+  }
 
   ///okeay above
   // Future<bool> verifyFaceAndPunch(
@@ -1848,13 +2156,25 @@ class AttendanceProvider extends ChangeNotifier {
   }
 
   void resetFaceScanner() {
-
     isFaceValid = false;
+    isManagerFlow = false;
+    isCapturing = false;
 
     isProcessingFrame = false;
 
-    instructionText =
-    "Upload your face image";
+    isLivenessPassed = false;
+
+    livenessInstruction = "";
+
+    latestBrightness = 0;
+
+    captureCount = 0;
+
+    currentAngleIndex = 0;
+
+    instructionText = "Align your face";
+
+    croppedFaceImages.clear();
 
     punchImage = null;
 
@@ -1882,6 +2202,142 @@ class AttendanceProvider extends ChangeNotifier {
     positionStream?.cancel();
     cameraController?.dispose();
     faceDetector.close();
+
+    FaceRecognitionService.instance.dispose();
     super.dispose();
+  }
+
+  ///manager 26.5
+  int? selectedEmployeeUid;
+
+  bool isManagerFlow = false;
+
+  void setManagerFlow(bool value) {
+    isManagerFlow = value;
+    notifyListeners();
+  }
+
+  void selectEmployee(int uid) {
+    selectedEmployeeUid = uid;
+    notifyListeners();
+  }
+
+  Future<void> registerEmployeeByManager() async {
+    try {
+      if (selectedEmployeeUid == null) {
+        instructionText = "Employee not selected";
+        return;
+      }
+
+      if (primaryImage == null) {
+        instructionText = "Select primary image";
+        return;
+      }
+
+      if (croppedFaceImages.isEmpty) {
+        instructionText = "Capture face angles";
+        return;
+      }
+
+      isRegistering = true;
+
+      instructionText = "Submitting employee registration...";
+
+      notifyListeners();
+
+      faceRegistrationModel = await repo.managerRegisterEmployeeFace(
+        uid: selectedEmployeeUid!,
+        primaryImages: [
+          primaryImage!,
+        ],
+        images: croppedFaceImages,
+      );
+      isManagerFlow = false;
+      instructionText = "Employee face submitted";
+
+      resetFaceScanner();
+    } catch (e) {
+      debugPrint(
+        "MANAGER REGISTER ERROR $e",
+      );
+
+      instructionText = "Registration failed";
+    } finally {
+      isRegistering = false;
+      notifyListeners();
+    }
+  }
+
+  String? managerAttendanceError;
+
+  Future<void> getManagerEmployeeAttendance(
+    int uid,
+  ) async {
+    try {
+      isLoading = true;
+
+      managerAttendanceError = null;
+
+      managerTodayAttendanceModel = null;
+
+      notifyListeners();
+
+      final response = await repo.apiClient.get(
+        "${ApiEndpoints.managerTodayAttendance}?uid=$uid",
+      );
+
+      /// 403 / BUSINESS FAILURE
+      if (response.statusCode == 403 || response.data["status"] == false) {
+        managerAttendanceError = response.data["message"] ??
+            "Employee is not assigned to any Shift or Location.";
+
+        return;
+      }
+
+      /// SUCCESS
+      managerTodayAttendanceModel = TodayAttendanceModel.fromJson(
+        response.data,
+      );
+    } catch (e) {
+      debugPrint(
+        "MANAGER ATTENDANCE ERROR $e",
+      );
+
+      managerAttendanceError = "Unable to fetch attendance.";
+    } finally {
+      isLoading = false;
+
+      notifyListeners();
+    }
+  }
+
+  Future<void> managerPunchAttendance({
+    required int uid,
+    required String locationId,
+    required BuildContext context,
+  }) async {
+    try {
+      if (punchImage == null) {
+        return;
+      }
+
+      isPunchLoading = true;
+
+      notifyListeners();
+
+      punchResponseModel = await repo.managerEmployeePunch(
+        uid: uid,
+        locationId: locationId,
+        punchImage: punchImage!,
+      );
+    } catch (e) {
+      debugPrint(
+        "MANAGER PUNCH ERROR $e",
+      );
+    } finally {
+      isPunchLoading = false;
+
+      notifyListeners();
+    }
   }
 }

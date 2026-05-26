@@ -18,8 +18,9 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the product and file versions while build-number is used as the build suffix.
 version: 1.0.0+1
 
+
 environment:
-  sdk: ^3.11.5
+  sdk: ^3.6.1
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -58,6 +59,7 @@ dependencies:
   intl: ^0.20.2
 #  face_verification: ^0.3.6
   flutter_secure_storage: ^10.2.0
+  vibration: ^3.1.8
 #  image: ^4.7.0
 
 dev_dependencies:

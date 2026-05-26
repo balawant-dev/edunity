@@ -31,6 +31,8 @@ class ProfileData {
   final String address;
   final EmergencyContact? emergencyContact;
   final CollegeDetails? collegeDetails;
+  final bool isAttendanceManager;
+  final bool isFaceCaptureManager;
 
   ProfileData({
     required this.uid,
@@ -51,6 +53,8 @@ class ProfileData {
     required this.address,
     this.emergencyContact,
     this.collegeDetails,
+    required this.isAttendanceManager,
+    required this.isFaceCaptureManager,
   });
 
   factory ProfileData.fromJson(Map<String, dynamic> json) {
@@ -77,6 +81,8 @@ class ProfileData {
       collegeDetails: json["college_details"] != null
           ? CollegeDetails.fromJson(json["college_details"])
           : null,
+      isAttendanceManager: json["is_attendance_manager"] ?? false,
+      isFaceCaptureManager: json["is_face_capture_manager"] ?? false,
     );
   }
 }
@@ -86,7 +92,8 @@ class EmergencyContact {
   final String relation;
   final String contact;
 
-  EmergencyContact({required this.name, required this.relation, required this.contact});
+  EmergencyContact(
+      {required this.name, required this.relation, required this.contact});
 
   factory EmergencyContact.fromJson(Map<String, dynamic> json) {
     return EmergencyContact(
@@ -103,7 +110,11 @@ class CollegeDetails {
   final String website;
   final String contactNo;
 
-  CollegeDetails({required this.college, required this.address, required this.website, required this.contactNo});
+  CollegeDetails(
+      {required this.college,
+      required this.address,
+      required this.website,
+      required this.contactNo});
 
   factory CollegeDetails.fromJson(Map<String, dynamic> json) {
     return CollegeDetails(
