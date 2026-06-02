@@ -68,12 +68,13 @@ class CameraPreviewWidget extends StatelessWidget {
                 child: SizedBox(
                   width: provider.cameraController!.value.previewSize!.height,
                   height: provider.cameraController!.value.previewSize!.width,
-                  child: Transform.scale(
-                    scaleX: -1,
-                    child: CameraPreview(
-                      provider.cameraController!,
-                    ),
+                  child: CameraPreview(
+                    provider.cameraController!,
                   ),
+                  // child: Transform.scale(
+                  //   scaleX: -1,
+                  //   child:
+                  // ),
                 ),
               ),
             ),

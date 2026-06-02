@@ -10,6 +10,7 @@ import 'core/routes/route_generator.dart';
 import 'core/services/navigation_service.dart';
 import 'features/attendance/provider/attendance_provider.dart';
 import 'features/attendance/service/face_recognition_service.dart';
+import 'features/attendence_summary/provider/attendance_report_provider.dart';
 import 'features/auth/change_password/provider/change_password_provider.dart';
 import 'features/auth/college_code/provider/college_provider.dart';
 import 'features/auth/forgot_password/provider/forgot_password_provider.dart';
@@ -52,6 +53,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ChangeNotifierProvider(create: (_) => InternetProvider()),
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
+        ChangeNotifierProvider(create: (_) => AttendanceReportProvider()),
         ChangeNotifierProvider(create: (_) => CMSProvider()),
         ChangeNotifierProvider(create: (_) => ManagerFaceProvider()),
         ChangeNotifierProvider(

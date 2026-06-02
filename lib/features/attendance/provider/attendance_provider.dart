@@ -8,10 +8,14 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/routes/app_routes.dart';
+import '../../home/model/home_model.dart';
+import '../../profile/provider/profile_provider.dart';
 import '../model/faceImagesModel.dart';
 import '../model/face_registration_model.dart';
 import '../model/face_status_model.dart';
@@ -79,14 +83,183 @@ class AttendanceProvider extends ChangeNotifier {
 
   late FaceDetector faceDetector;
 
+  List<List<double>> managerEmployeeEmbeddings = [];
+
   ///Map section ka code hai
   GoogleMapController? mapController;
   StreamSubscription<Position>? positionStream;
   LatLng? currentLatLng;
 
+  bool isLocationLoading = true;
   bool isInsideRadius = false;
   double currentHeading = 0;
   double distanceInMeter = 0;
+
+  bool showCamera = false;
+
+  bool isAttendanceReady = false;
+
+  bool _embeddingsPrepared = false;
+
+  Future<void> prepareLocalEmbeddingsFromServer() async {
+    try {
+      debugPrint("RESTORE START");
+
+      await FaceRecognitionService.instance.init();
+
+      if (faceImagesModel == null) {
+        debugPrint("FACE IMAGES NULL -> FETCH");
+        await getFaceImages();
+      }
+
+      debugPrint(
+        "PRIMARY=${faceImagesModel?.primaryImages?.length} "
+        "REF=${faceImagesModel?.referenceImages?.length}",
+      );
+
+      List<File> files = [];
+
+      for (final image in faceImagesModel?.primaryImages ?? []) {
+        debugPrint("DOWNLOAD PRIMARY => ${image.url}");
+        final file = await downloadImage(image.url!);
+        debugPrint("DOWNLOADED => ${file.path}");
+        files.add(file);
+      }
+
+      for (final image in faceImagesModel?.referenceImages ?? []) {
+        debugPrint("DOWNLOAD REF => ${image.url}");
+        final file = await downloadImage(image.url!);
+        debugPrint("DOWNLOADED => ${file.path}");
+        files.add(file);
+      }
+
+      debugPrint("FILES => ${files.length}");
+
+      final embeddings = await FaceRecognitionService.instance
+          .generateEmbeddingsFromFiles(files);
+
+      debugPrint("EMBEDDINGS => ${embeddings.length}");
+
+      await FaceRecognitionService.instance.saveEmbeddings(
+        embeddings,
+      );
+      _embeddingsPrepared = true;
+
+      debugPrint(
+        "LOCAL EMBEDDINGS RESTORED => ${embeddings.length}",
+      );
+      final saved = await FaceRecognitionService.instance.getSavedEmbeddings();
+
+      debugPrint(
+        "LOCAL EMBEDDINGS RESTORED => ${saved?.length}",
+      );
+    } catch (e) {
+      debugPrint("RESTORE ERROR => $e");
+    }
+  }
+
+  Future<void> prepareManagerEmployeeEmbeddings() async {
+    try {
+      managerEmployeeEmbeddings = [];
+
+      if (faceImagesModel == null || faceImagesModel!.primaryImages == null) {
+        return;
+      }
+
+      List<File> files = [];
+
+      /// PRIMARY
+      for (final image in faceImagesModel!.primaryImages!) {
+        if (image.url == null) {
+          continue;
+        }
+
+        final file = await downloadImage(
+          image.url!,
+        );
+
+        files.add(
+          file,
+        );
+      }
+
+      /// OTHER IMAGES
+      if (faceImagesModel!.referenceImages != null) {
+        for (final image in faceImagesModel!.referenceImages!) {
+          if (image.url == null) {
+            continue;
+          }
+
+          final file = await downloadImage(
+            image.url!,
+          );
+
+          files.add(
+            file,
+          );
+        }
+      }
+
+      managerEmployeeEmbeddings =
+          await FaceRecognitionService.instance.generateEmbeddingsFromFiles(
+        files,
+      );
+
+      debugPrint(
+        "EMPLOYEE EMBEDDINGS => ${managerEmployeeEmbeddings.length}",
+      );
+    } catch (e) {
+      debugPrint(
+        "EMBED BUILD ERROR $e",
+      );
+    }
+  }
+
+  LocationModel? getNearestLocation(
+    List<LocationModel> locations,
+    LatLng userLatLng,
+  ) {
+    if (locations.isEmpty) {
+      return null;
+    }
+
+    LocationModel nearest = locations.first;
+
+    double nearestDistance = double.infinity;
+
+    for (final location in locations) {
+      final lat = double.tryParse(
+        location.lat,
+      );
+
+      final lng = double.tryParse(
+        location.lng,
+      );
+
+      if (lat == null || lng == null) {
+        continue;
+      }
+
+      final distance = Geolocator.distanceBetween(
+        userLatLng.latitude,
+        userLatLng.longitude,
+        lat,
+        lng,
+      );
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+
+        nearest = location;
+      }
+    }
+
+    debugPrint(
+      "NEAREST LOCATION => ${nearest.name} | ${nearest.locationId} | ${nearestDistance.toStringAsFixed(2)} m",
+    );
+
+    return nearest;
+  }
 
   Future<void> getCurrentLocation({
     required double officeLat,
@@ -94,6 +267,8 @@ class AttendanceProvider extends ChangeNotifier {
     required double radius,
   }) async {
     try {
+      isLocationLoading = true;
+      notifyListeners();
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
       if (!serviceEnabled) {
@@ -128,11 +303,22 @@ class AttendanceProvider extends ChangeNotifier {
         position.longitude,
       );
 
+      debugPrint("===== LOCATION CHECK =====");
+      debugPrint("OFFICE LAT=$officeLat LNG=$officeLng");
+      debugPrint("USER LAT=${position.latitude} LNG=${position.longitude}");
+      debugPrint("RADIUS=$radius");
+      debugPrint("DISTANCE=$distanceInMeter");
+      debugPrint("INSIDE=$isInsideRadius");
+
       isInsideRadius = distanceInMeter <= radius;
+      isLocationLoading = false;
 
       notifyListeners();
     } catch (e) {
       debugPrint(e.toString());
+    } finally {
+      isLocationLoading = false;
+      notifyListeners();
     }
   }
 
@@ -184,50 +370,124 @@ class AttendanceProvider extends ChangeNotifier {
     _stepHapticTriggered = false;
   }
 
+  // void startLiveTracking({
+  //   required double officeLat,
+  //   required double officeLng,
+  //   required double radius,
+  // }) {
+  //   Geolocator.getPositionStream(
+  //     locationSettings: const LocationSettings(
+  //       accuracy: LocationAccuracy.bestForNavigation,
+  //       distanceFilter: 5, //2
+  //     ),
+  //   ).listen((position) async {
+  //     currentLatLng = LatLng(
+  //       position.latitude,
+  //       position.longitude,
+  //     );
+  //
+  //     currentHeading = position.heading;
+  //
+  //     distanceInMeter = Geolocator.distanceBetween(
+  //       officeLat,
+  //       officeLng,
+  //       position.latitude,
+  //       position.longitude,
+  //     );
+  //
+  //     isInsideRadius = distanceInMeter <= radius;
+  //
+  //     /// AUTO CAMERA MOVE
+  //
+  //     if (mapController != null) {
+  //       mapController!.animateCamera(
+  //         CameraUpdate.newCameraPosition(
+  //           CameraPosition(
+  //             target: currentLatLng!,
+  //             zoom: 18,
+  //             tilt: 45,
+  //             bearing: currentHeading,
+  //           ),
+  //         ),
+  //       );
+  //     }
+  //
+  //     notifyListeners();
+  //   });
+  // }
   void startLiveTracking({
     required double officeLat,
     required double officeLng,
     required double radius,
   }) {
-    Geolocator.getPositionStream(
+    /// avoid duplicate listeners
+    positionStream?.cancel();
+
+    positionStream = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 5, //2
+        distanceFilter: 8,
       ),
-    ).listen((position) async {
-      currentLatLng = LatLng(
-        position.latitude,
-        position.longitude,
-      );
-
-      currentHeading = position.heading;
-
-      distanceInMeter = Geolocator.distanceBetween(
-        officeLat,
-        officeLng,
-        position.latitude,
-        position.longitude,
-      );
-
-      isInsideRadius = distanceInMeter <= radius;
-
-      /// AUTO CAMERA MOVE
-
-      if (mapController != null) {
-        mapController!.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: currentLatLng!,
-              zoom: 18,
-              tilt: 45,
-              bearing: currentHeading,
-            ),
-          ),
+    ).listen(
+      (position) async {
+        currentLatLng = LatLng(
+          position.latitude,
+          position.longitude,
         );
-      }
 
-      notifyListeners();
-    });
+        currentHeading = position.heading;
+
+        distanceInMeter = Geolocator.distanceBetween(
+          officeLat,
+          officeLng,
+          position.latitude,
+          position.longitude,
+        );
+
+        isInsideRadius = distanceInMeter <= radius;
+
+        debugPrint("===== LIVE TRACK =====");
+        debugPrint("OFFICE=$officeLat,$officeLng");
+        debugPrint("USER=${position.latitude},${position.longitude}");
+        debugPrint("DIST=${distanceInMeter.toStringAsFixed(2)}");
+        debugPrint("RADIUS=$radius");
+        debugPrint("INSIDE=$isInsideRadius");
+
+        showCamera = distanceInMeter <= radius;
+
+        /// SAFE CAMERA MOVE
+        final controller = mapController;
+
+        if (controller != null) {
+          try {
+            await controller.animateCamera(
+              CameraUpdate.newCameraPosition(
+                CameraPosition(
+                  target: currentLatLng!,
+                  zoom: 18,
+                  tilt: 45,
+                  bearing: currentHeading,
+                ),
+              ),
+            );
+          } catch (e) {
+            debugPrint(
+              "MAP CAMERA IGNORE => $e",
+            );
+          }
+        }
+
+        notifyListeners();
+      },
+    );
+  }
+
+  void disposeMap() {
+    mapController = null;
+
+    positionStream?.cancel();
+
+    positionStream = null;
   }
 
   ///Map section ka code hai End
@@ -332,7 +592,35 @@ class AttendanceProvider extends ChangeNotifier {
       );
 
       if (matched) {
-        await punchAttendance(locationId: locationId, context: context);
+        final actions = getAvailableActions();
+
+        if (actions.isEmpty) {
+          instructionText = "No attendance action available";
+
+          notifyListeners();
+
+          return;
+        }
+
+        String action = actions.first;
+
+        String breakId = "";
+
+        /// START BREAK
+        if (action == "Start Break") {
+          instructionText = "Select break";
+
+          notifyListeners();
+
+          return;
+        }
+
+        await punchAttendance(
+          locationId: locationId,
+          action: action,
+          breakId: breakId,
+          context: context,
+        );
       } else {
         instructionText = "Face not matched";
       }
@@ -523,9 +811,19 @@ class AttendanceProvider extends ChangeNotifier {
         minFaceSize: 0.15,
       ),
     );
+    await FaceRecognitionService.instance.init();
 
     await initCamera();
     await getFaceStatus();
+    await getFaceImages();
+    final saved = await FaceRecognitionService.instance.getSavedEmbeddings();
+
+    if (saved == null || saved.isEmpty) {
+      await prepareLocalEmbeddingsFromServer();
+    } else {
+      _embeddingsPrepared = true;
+      debugPrint("USING LOCAL FACE PROFILE");
+    }
     await getTodayAttendance();
   }
 
@@ -756,7 +1054,7 @@ class AttendanceProvider extends ChangeNotifier {
   /// CAPTURE FACE
   /// ============================================================
   // Improved Face Capture with Angle Guidance
-// ============================================================
+  // ============================================================
   // IMPROVED FACE CAPTURE WITH MIRROR FIX
   // ============================================================
 
@@ -1630,12 +1928,69 @@ class AttendanceProvider extends ChangeNotifier {
   //   }
   // }
 
+  List<String> getAvailableActions() {
+    final summary = todayAttendanceModel?.attendanceSummary;
+
+    final timeline = summary?.timeline ?? [];
+
+    final isStudent = todayAttendanceModel?.userType == "student";
+
+    /// STUDENT FLOW
+    if (isStudent) {
+      if (timeline.isEmpty) {
+        return ["In"];
+      }
+
+      final last = timeline.last.type;
+
+      if (last == "In") {
+        return ["Out"];
+      }
+
+      return [];
+    }
+
+    /// EMPLOYEE FLOW
+
+    if (timeline.isEmpty) {
+      return ["In"];
+    }
+
+    final last = timeline.last.type;
+
+    switch (last) {
+      case "In":
+        return [
+          "Start Break",
+          "Out",
+        ];
+
+      case "Start Break":
+        return [
+          "End Break",
+        ];
+
+      case "End Break":
+        return [
+          "Out",
+        ];
+
+      case "Out":
+        return ["In"];
+
+      default:
+        return ["In"];
+    }
+  }
+
   /// ============================================================
   /// PUNCH ATTENDANCE
   /// ============================================================
 
   Future<void> punchAttendance({
     required String locationId,
+    required String action,
+    required String breakId,
     required BuildContext context,
   }) async {
     try {
@@ -1646,16 +2001,24 @@ class AttendanceProvider extends ChangeNotifier {
       notifyListeners();
 
       final userType = todayAttendanceModel?.userType ?? "";
+      final lat = currentLatLng?.latitude ?? 0;
 
+      final lng = currentLatLng?.longitude ?? 0;
       if (userType == "employee") {
         punchResponseModel = await repo.employeePunch(
-          locationId: locationId,
-          punchImage: punchImage!,
-        );
+            locationId: locationId,
+            punchImage: punchImage!,
+            lat: lat,
+            lng: lng,
+            action: action,
+            breakId: breakId);
       } else {
         punchResponseModel = await repo.studentPunch(
           locationId: locationId,
           punchImage: punchImage!,
+          lat: lat,
+          lng: lng,
+          action: action,
         );
       }
       final summary = todayAttendanceModel?.attendanceSummary;
@@ -1668,8 +2031,12 @@ class AttendanceProvider extends ChangeNotifier {
         context: context,
         barrierDismissible: false,
         builder: (context) {
+          final profile = context.read<ProfileProvider>().profileModel;
           return AttendanceSuccessPopup(
-            isPunchIn: isPunchIn,
+            action: action,
+            employeeName: profile?.data.fieldName ?? "",
+            employeeId: profile?.data.userId ?? "",
+            imageUrl: profile?.data.photo ?? "",
             onHomeTap: () {
               Navigator.pushReplacementNamed(
                 context,
@@ -1782,82 +2149,82 @@ class AttendanceProvider extends ChangeNotifier {
   // }
 
   ///forSingle
-//   Future<bool> verifyFaceAndPunch(
-//       BuildContext context,
-//       ) async {
-//
-//     try {
-//
-//       isPunchLoading = true;
-//
-//       instructionText =
-//       "Scanning face...";
-//
-//       notifyListeners();
-//
-//       final captured =
-//       await capturePunchImage();
-//
-//       if (!captured ||
-//           punchImage == null) {
-//
-//         return false;
-//       }
-//
-//       final inputImage =
-//       InputImage.fromFile(
-//         punchImage!,
-//       );
-//
-//       final faces =
-//       await faceDetector.processImage(
-//         inputImage,
-//       );
-//
-//       if (faces.isEmpty) {
-//         return false;
-//       }
-//
-//       final embedding =
-//       await FaceRecognitionService.instance
-//           .extractEmbedding(
-//         punchImage!,
-//         faces.first,
-//       );
-//
-//       final matched =
-//       await FaceRecognitionService.instance
-//           .verifyFace(
-//         embedding,
-//       );
-//
-//       if (!matched) {
-//
-//         instructionText =
-//         "Face not matched";
-//
-//         return false;
-//       }
-//
-//       instructionText =
-//       "Face matched";
-//
-//       return true;
-//
-//     } catch (e) {
-//
-//       instructionText =
-//       "Verification failed";
-//
-//       return false;
-//
-//     } finally {
-//
-//       isPunchLoading = false;
-//
-//       notifyListeners();
-//     }
-//   }
+  //   Future<bool> verifyFaceAndPunch(
+  //       BuildContext context,
+  //       ) async {
+  //
+  //     try {
+  //
+  //       isPunchLoading = true;
+  //
+  //       instructionText =
+  //       "Scanning face...";
+  //
+  //       notifyListeners();
+  //
+  //       final captured =
+  //       await capturePunchImage();
+  //
+  //       if (!captured ||
+  //           punchImage == null) {
+  //
+  //         return false;
+  //       }
+  //
+  //       final inputImage =
+  //       InputImage.fromFile(
+  //         punchImage!,
+  //       );
+  //
+  //       final faces =
+  //       await faceDetector.processImage(
+  //         inputImage,
+  //       );
+  //
+  //       if (faces.isEmpty) {
+  //         return false;
+  //       }
+  //
+  //       final embedding =
+  //       await FaceRecognitionService.instance
+  //           .extractEmbedding(
+  //         punchImage!,
+  //         faces.first,
+  //       );
+  //
+  //       final matched =
+  //       await FaceRecognitionService.instance
+  //           .verifyFace(
+  //         embedding,
+  //       );
+  //
+  //       if (!matched) {
+  //
+  //         instructionText =
+  //         "Face not matched";
+  //
+  //         return false;
+  //       }
+  //
+  //       instructionText =
+  //       "Face matched";
+  //
+  //       return true;
+  //
+  //     } catch (e) {
+  //
+  //       instructionText =
+  //       "Verification failed";
+  //
+  //       return false;
+  //
+  //     } finally {
+  //
+  //       isPunchLoading = false;
+  //
+  //       notifyListeners();
+  //     }
+  //   }
   ///fjhdfjals Thikm hai below
   Future<bool> verifyFaceAndPunch(
     BuildContext context,
@@ -1960,9 +2327,34 @@ class AttendanceProvider extends ChangeNotifier {
       /// VERIFY
       /// ===========================
 
-      final matched = await FaceRecognitionService.instance.verifyFace(
-        currentEmbedding,
-      );
+      // final matched = await FaceRecognitionService.instance.verifyFace(
+      //   currentEmbedding,
+      // );
+      if (!isManagerFlow) {
+        if (!_embeddingsPrepared) {
+          instructionText = "Loading face profile...";
+          notifyListeners();
+
+          await prepareLocalEmbeddingsFromServer();
+        }
+      }
+
+      bool matched = false;
+
+      if (isManagerFlow) {
+        matched =
+            await FaceRecognitionService.instance.verifyFaceAgainstEmbeddings(
+          currentEmbedding,
+          managerEmployeeEmbeddings,
+        );
+        // matched = await FaceRecognitionService.instance.verifyFace(
+        //   currentEmbedding,
+        // );
+      } else {
+        matched = await FaceRecognitionService.instance.verifyFace(
+          currentEmbedding,
+        );
+      }
 
       if (!matched) {
         instructionText = "Face not matched";
@@ -2135,24 +2527,24 @@ class AttendanceProvider extends ChangeNotifier {
   //   }
   // }
   Future<File> downloadImage(String url) async {
-    try {
-      final dio = Dio();
+    final response = await Dio().get(
+      url,
+      options: Options(
+        responseType: ResponseType.bytes,
+      ),
+    );
 
-      // temp directory
-      final dir = await getTemporaryDirectory();
+    final dir = await getTemporaryDirectory();
 
-      // local file path
-      final filePath = '${dir.path}/old_face.jpg';
+    final file = File(
+      '${dir.path}/${DateTime.now().microsecondsSinceEpoch}.jpg',
+    );
 
-      // download image
-      await dio.download(url, filePath);
+    await file.writeAsBytes(
+      response.data,
+    );
 
-      // return local file
-      return File(filePath);
-    } catch (e) {
-      debugPrint("DOWNLOAD IMAGE ERROR => $e");
-      rethrow;
-    }
+    return file;
   }
 
   void resetFaceScanner() {
@@ -2211,6 +2603,8 @@ class AttendanceProvider extends ChangeNotifier {
   int? selectedEmployeeUid;
 
   bool isManagerFlow = false;
+
+  String? loadingAction;
 
   void setManagerFlow(bool value) {
     isManagerFlow = value;
@@ -2339,5 +2733,61 @@ class AttendanceProvider extends ChangeNotifier {
 
       notifyListeners();
     }
+  }
+
+  List<AttendanceCardModel> get attendanceCards {
+    final attendance = todayAttendanceModel?.attendanceSummary;
+    final shift = todayAttendanceModel?.assignment?.shift;
+
+    if (attendance == null) return [];
+
+    return [
+      AttendanceCardModel(
+        title: "Status",
+        value: attendance.status ?? '-',
+        subtitle: "${attendance.totalPunches} Punches",
+        bottomText: attendance.dayName,
+        color:
+            attendance.status == "Present" ? AppColors2.green : Colors.orange,
+        icon: Icons.check_circle,
+      ),
+      AttendanceCardModel(
+        title: "Punch In",
+        value: formatTimestamp(attendance.punchInTime),
+        subtitle: attendance.timeline.isNotEmpty
+            ? attendance.timeline.first.note
+            : "",
+        bottomText: "Sch: ${shift?.startTime ?? '--'}",
+        color: AppColors2.blue,
+        icon: Icons.login,
+      ),
+      AttendanceCardModel(
+        title: "Punch Out",
+        value: formatTimestamp(attendance.punchOutTime),
+        subtitle: attendance.workingHours ?? "00:00",
+        bottomText: "Sch: ${shift?.endTime ?? '--'}",
+        color: AppColors2.textDark,
+        icon: Icons.logout,
+      ),
+      AttendanceCardModel(
+        title: "Location",
+        value: attendance.timeline.isNotEmpty
+            ? attendance.timeline.first.location
+            : "--",
+        subtitle: attendance.timeline.isNotEmpty
+            ? attendance.timeline.first.type
+            : "",
+        bottomText: "Field Staff",
+        color: AppColors2.green,
+        icon: Icons.location_on,
+      ),
+    ];
+  }
+
+  String formatTimestamp(int? timestamp) {
+    if (timestamp == null || timestamp == 0) return "--";
+
+    return DateFormat("hh:mm a")
+        .format(DateTime.fromMillisecondsSinceEpoch(timestamp * 1000));
   }
 }

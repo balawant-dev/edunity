@@ -30,9 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     Future.microtask(() {
       context.read<ProfileProvider>().getProfile();
-      context
-          .read<AttendanceProvider>()
-          .initialize();
+      context.read<AttendanceProvider>().initialize();
     });
   }
 
@@ -53,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<HomeProvider>();
+    final attendancePro = context.watch<AttendanceProvider>();
     final profilePro = context.watch<ProfileProvider>();
 
     return Scaffold(
@@ -61,20 +60,12 @@ class _HomeScreenState extends State<HomeScreen> {
       drawer: const CustomDrawer(),
       appBar: AppBar(
         backgroundColor: Colors.white,
-
         elevation: 0,
-
         centerTitle: false,
-
         automaticallyImplyLeading: false,
-
         toolbarHeight: 65.h,
-
-
-
         title: Row(
           mainAxisSize: MainAxisSize.min,
-
           children: [
             /// LOGO
 
@@ -82,26 +73,22 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 _scaffoldKey.currentState!.openDrawer();
               },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(6.r),
-
-                  child: Image.asset(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6.r),
+                child: Image.asset(
                   AppImages.collegeLogo,
-
-                    height: 55.h,
-                    width: 48.w,
-
-                    fit: BoxFit.cover,
-                  ),
+                  height: 55.h,
+                  width: 48.w,
+                  fit: BoxFit.cover,
                 ),
               ),
+            ),
 
-              SizedBox(width: 20.w),
-
+            SizedBox(width: 20.w),
 
             /// TITLE
             Flexible(
-              child:      Container(
+              child: Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: 12.w,
                   vertical: 8.h,
@@ -130,36 +117,30 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Color(0xffdfdfdf),
               borderRadius: BorderRadius.circular(12.r),
             ),
-            child:  Icon(Icons.notifications_none,size: 24.sp,),
+            child: Icon(
+              Icons.notifications_none,
+              size: 24.sp,
+            ),
           ),
         ],
       ),
-
       body: RefreshIndicator(
-        onRefresh: ()async{
-          context
-              .read<AttendanceProvider>()
-              .initialize();
+        onRefresh: () async {
+          context.read<AttendanceProvider>().initialize();
           throw true;
         },
         child: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(18.r),
-
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
-
                 // SizedBox(height: 24.h),
 
                 StudentCard(
                   name: profilePro.profileModel?.data.fieldName ?? "",
-
                   course: profilePro.profileModel?.data.course ?? "",
-
                   userId: profilePro.profileModel?.data.userId ?? "",
-
                   image: profilePro.profileModel?.data.photo ?? "",
                 ),
 
@@ -172,11 +153,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 SizedBox(height: 10.h),
 
-                Row(
-                  children: vm.attendanceCards.map((e) {
-                    return AttendanceCard(model: e);
-                  }).toList(),
-                ),
+                attendancePro.attendanceCards.isEmpty
+                    ? const SizedBox()
+                    : Row(
+                        children: attendancePro.attendanceCards
+                            .map((e) => AttendanceCard(model: e))
+                            .toList(),
+                      ),
 
                 const SizedBox(height: 18),
 

@@ -164,7 +164,7 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const TermsConditionScreen());
 
       case AppRoutes.campusConnect:
-        return MaterialPageRoute(builder: (_) => const CampusConnectScreen());
+        return MaterialPageRoute(builder: (_) => CampusConnectScreen());
 
       // case AppRoutes.home:
       // return MaterialPageRoute(builder: (_) => HomeScreen());

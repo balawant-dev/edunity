@@ -38,6 +38,8 @@ class ApiEndpoints {
 
   static const String managerEmployeePunch = "/api/manager/employee/punch";
 
+  static const attendanceReport = "/api/employee/attendance-report";
+
   ///CMS Section URL
   static const String privacyPolicy = "/api/privacy-policy";
   static const String aboutUs = "/api/about-us";

@@ -35,8 +35,10 @@ class _ManagerAttendanceCaptureScreenState
       await provider.getManagerEmployeeAttendance(
         widget.employee.uid!,
       );
-
       await provider.getFaceImages();
+
+      await provider.prepareManagerEmployeeEmbeddings();
+      // await provider.getFaceImages();
     });
   }
 

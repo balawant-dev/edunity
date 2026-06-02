@@ -1,104 +1,113 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
 import '../../../common/widgets/custom_appbar.dart';
-
+import '../../home/widget/studentCard.dart';
+import '../../profile/provider/profile_provider.dart';
 
 class QuickAccessScreen extends StatelessWidget {
   const QuickAccessScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final profilePro = context.watch<ProfileProvider>();
     return Scaffold(
       backgroundColor: Colors.white,
- appBar: CustomAppBar(title: "Quick Access",),
+      appBar: CustomAppBar(
+        title: "Quick Access",
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               /// TOP BAR
 
-
-
               /// PROFILE CARD
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(.08),
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-
-                    /// LEFT BLUE BAR
-                    Container(
-                      width: 5,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-
-                    const SizedBox(width: 15),
-
-                    /// IMAGE
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(18),
-                      child: Image.network(
-                        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
-                        height: 90,
-                        width: 90,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-
-                    const SizedBox(width: 18),
-
-                    /// INFO
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            "Ramesh Kumar Singh",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            "ID: BED-2024-0892",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black54,
-                            ),
-                          ),
-                          SizedBox(height: 5),
-                          Text(
-                            "B.Ed 2 Year Programme",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              // Container(
+              //   padding: const EdgeInsets.all(18),
+              //   decoration: BoxDecoration(
+              //     color: Colors.white,
+              //     borderRadius: BorderRadius.circular(25),
+              //     boxShadow: [
+              //       BoxShadow(
+              //         color: Colors.grey.withOpacity(.08),
+              //         blurRadius: 10,
+              //         spreadRadius: 2,
+              //       ),
+              //     ],
+              //   ),
+              //   child: Row(
+              //     children: [
+              //       /// LEFT BLUE BAR
+              //       Container(
+              //         width: 5,
+              //         height: 120,
+              //         decoration: BoxDecoration(
+              //           color: Colors.blue,
+              //           borderRadius: BorderRadius.circular(10),
+              //         ),
+              //       ),
+              //
+              //       const SizedBox(width: 15),
+              //
+              //       /// IMAGE
+              //       ClipRRect(
+              //         borderRadius: BorderRadius.circular(18),
+              //         child: Image.network(
+              //           "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
+              //           height: 90,
+              //           width: 90,
+              //           fit: BoxFit.cover,
+              //         ),
+              //       ),
+              //
+              //       const SizedBox(width: 18),
+              //
+              //       /// INFO
+              //       Expanded(
+              //         child: Column(
+              //           crossAxisAlignment: CrossAxisAlignment.start,
+              //           children: const [
+              //             Text(
+              //               "Ramesh Kumar Singh",
+              //               style: TextStyle(
+              //                 fontSize: 20,
+              //                 fontWeight: FontWeight.w600,
+              //               ),
+              //             ),
+              //             SizedBox(height: 8),
+              //             Text(
+              //               "ID: BED-2024-0892",
+              //               style: TextStyle(
+              //                 fontSize: 16,
+              //                 color: Colors.black54,
+              //               ),
+              //             ),
+              //             SizedBox(height: 5),
+              //             Text(
+              //               "B.Ed 2 Year Programme",
+              //               style: TextStyle(
+              //                 fontSize: 16,
+              //                 color: Colors.black54,
+              //               ),
+              //             ),
+              //           ],
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
+              StudentCard(
+                name: profilePro.profileModel?.data.fieldName ?? "",
+                course: profilePro.profileModel?.data.course ?? "",
+                userId: profilePro.profileModel?.data.userId ?? "",
+                image: profilePro.profileModel?.data.photo ?? "",
               ),
 
+              SizedBox(height: 15.h),
               const SizedBox(height: 35),
 
               /// ACADEMICS
@@ -171,7 +180,6 @@ class QuickAccessScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         /// TITLE
         Row(
           children: [
@@ -207,8 +215,7 @@ class QuickAccessScreen extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: items.length,
-          gridDelegate:
-          const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 4,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
@@ -229,7 +236,6 @@ class QuickAccessScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-
                   /// ICON
                   Container(
                     height: 42,

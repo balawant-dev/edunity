@@ -101,13 +101,19 @@ class SuccessAttendanceDialog extends StatelessWidget {
 
 class AttendanceSuccessPopup extends StatelessWidget {
   final VoidCallback onHomeTap;
+  final String action;
 
-  final bool isPunchIn;
+  final String employeeName;
+  final String employeeId;
+  final String? imageUrl;
 
   const AttendanceSuccessPopup({
     super.key,
     required this.onHomeTap,
-    required this.isPunchIn,
+    required this.action,
+    required this.employeeName,
+    required this.employeeId,
+    this.imageUrl,
   });
 
   @override
@@ -118,11 +124,40 @@ class AttendanceSuccessPopup extends StatelessWidget {
       DateTime.now(),
     );
 
-    final title = isPunchIn ? "Punch In Successful" : "Punch Out Successful";
+    String title;
+    String subtitle;
+    String timeLabel;
 
-    final subtitle = isPunchIn
-        ? "Your Punch In has been recorded successfully."
-        : "Your Punch Out has been recorded successfully.";
+    switch (action) {
+      case "In":
+        title = "Punch In Successful";
+        subtitle = "Your Punch In has been recorded successfully.";
+        timeLabel = "Punch In Time";
+        break;
+
+      case "Out":
+        title = "Punch Out Successful";
+        subtitle = "Your Punch Out has been recorded successfully.";
+        timeLabel = "Punch Out Time";
+        break;
+
+      case "Start Break":
+        title = "Break Started";
+        subtitle = "Your break has been started successfully.";
+        timeLabel = "Break Start Time";
+        break;
+
+      case "End Break":
+        title = "Break Ended";
+        subtitle = "Your break has been ended successfully.";
+        timeLabel = "Break End Time";
+        break;
+
+      default:
+        title = "Attendance Updated";
+        subtitle = "Attendance marked successfully.";
+        timeLabel = "Time";
+    }
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -142,6 +177,65 @@ class AttendanceSuccessPopup extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: Colors.grey.shade200,
+                ),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
+                        ? NetworkImage(imageUrl!)
+                        : null,
+                    child: imageUrl == null || imageUrl!.isEmpty
+                        ? const Icon(
+                            Icons.person,
+                            size: 30,
+                          )
+                        : null,
+                  ),
+                  const SizedBox(
+                    width: 14,
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          employeeName,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 4,
+                        ),
+                        Text(
+                          "ID : $employeeId",
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(
+              height: 22,
+            ),
+
             /// SUCCESS ICON
 
             Container(
@@ -208,7 +302,7 @@ class AttendanceSuccessPopup extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    isPunchIn ? "Punch In Time" : "Punch Out Time",
+                    timeLabel,
                     style: TextStyle(
                       color: Colors.grey.shade700,
                       fontWeight: FontWeight.w500,

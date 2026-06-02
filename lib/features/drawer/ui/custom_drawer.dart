@@ -2,10 +2,12 @@ import 'package:edunity/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_images.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/services/local_storage_service.dart';
+import '../../attendance/service/face_recognition_service.dart';
 import '../../profile/provider/profile_provider.dart';
 import '../../staff/employee/views/select_employee_screen.dart';
 import '../../token/repo/token_repo.dart';
@@ -226,16 +228,16 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         );
                       },
                     ),
-                    drawerItem(
-                      icon: Icons.ten_k_outlined,
-                      title: "Attendance Home",
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.attendanceHome,
-                        );
-                      },
-                    ),
+                    // drawerItem(
+                    //   icon: Icons.ten_k_outlined,
+                    //   title: "Attendance Home",
+                    //   onTap: () {
+                    //     Navigator.pushNamed(
+                    //       context,
+                    //       AppRoutes.attendanceHome,
+                    //     );
+                    //   },
+                    // ),
 
                     const Divider(height: 32, thickness: 1),
 
@@ -357,7 +359,11 @@ class _CustomDrawerState extends State<CustomDrawer> {
                           borderRadius: BorderRadius.circular(8.r)),
                     ),
                     onPressed: () async {
+                      await FaceRecognitionService.instance.clearEmbeddings();
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.clear();
                       Navigator.pop(context);
+
                       logout(context);
                       // AppSettings.clearUserType();
                       // SecureStorageService.logout(context);

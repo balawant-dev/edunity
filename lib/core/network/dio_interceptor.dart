@@ -246,36 +246,23 @@ class DioInterceptor extends Interceptor {
 
     /// 🔥 AUTH APIs
     final isAuthApi =
-
-        path.contains("edu-login") ||
-
-            path.contains("refresh-token");
+        path.contains("edu-login") || path.contains("refresh-token");
 
     /// 🔥 TOKEN EXPIRED CHECK
-    final isTokenExpired =
-
-        !isAuthApi && (
-
-            response.statusCode == 401 ||
-
-                (
-                    data is Map &&
-                        data["status"] == false &&
-                        data["message"]
-                            .toString()
-                            .toLowerCase()
-                            .contains("expired token")
-                ) ||
-
-                (
-                    data is Map &&
-                        data["status"] == false &&
-                        data["message"]
-                            .toString()
-                            .toLowerCase()
-                            .contains("invalid or expired token")
-                )
-        );
+    final isTokenExpired = !isAuthApi &&
+        (response.statusCode == 401 ||
+            (data is Map &&
+                data["status"] == false &&
+                data["message"]
+                    .toString()
+                    .toLowerCase()
+                    .contains("expired token")) ||
+            (data is Map &&
+                data["status"] == false &&
+                data["message"]
+                    .toString()
+                    .toLowerCase()
+                    .contains("invalid or expired token")));
 
     // final isTokenExpired =
     //     response.statusCode == 401 ||
@@ -308,9 +295,7 @@ class DioInterceptor extends Interceptor {
 
         final refreshResponse = await dio.post(
           ApiEndpoints.refreshToken,
-
           data: {"refresh_token": refreshToken},
-
           options: Options(headers: {"Authorization": null}),
         );
         print(
@@ -340,6 +325,7 @@ class DioInterceptor extends Interceptor {
 
           return handler.resolve(retryResponse);
         }
+
         /// FAILED
         else {
           isRefreshing = false;
@@ -365,8 +351,7 @@ class DioInterceptor extends Interceptor {
     await LocalStorageService.clearSession();
 
     NavigationService.navigatorKey.currentState?.pushNamedAndRemoveUntil(
-      AppRoutes.login,
-
+      AppRoutes.collegeCode,
       (route) => false,
     );
   }

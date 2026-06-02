@@ -32,7 +32,7 @@ class _FaceAttendanceScreenState extends State<FaceAttendanceScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
-        title: "Face Attendance",
+        title: "Face Attendance2.0",
         showBack: false,
         showLogo: true,
       ),

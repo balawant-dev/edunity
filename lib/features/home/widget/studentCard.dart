@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../model/home_model.dart';
-class StudentCard extends StatelessWidget {
 
+class StudentCard extends StatelessWidget {
   final String name;
 
   final String course;
@@ -15,13 +15,9 @@ class StudentCard extends StatelessWidget {
 
   const StudentCard({
     super.key,
-
     required this.name,
-
     required this.course,
-
     required this.userId,
-
     required this.image,
   });
 
@@ -43,8 +39,8 @@ class StudentCard extends StatelessWidget {
         // 2. Main White Card
         Container(
           height: 120,
-          margin:  EdgeInsets.only(left: 10.w),
-          padding:  EdgeInsets.all(14.r),
+          margin: EdgeInsets.only(left: 10.w),
+          padding: EdgeInsets.all(14.r),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16.r),
@@ -89,15 +85,16 @@ class StudentCard extends StatelessWidget {
                   width: 80.w,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
-                    return Image.asset(AppImages.logoNotFound, height: 80.h, width: 80.w, fit: BoxFit.cover);
+                    return Image.asset(AppImages.logoNotFound,
+                        height: 80.h, width: 80.w, fit: BoxFit.cover);
                   },
                 ),
               ),
 
               // --- Pehli Vertical Line ---
-               SizedBox(width: 8.w),
+              SizedBox(width: 8.w),
               Container(width: 1.w, height: 70.h, color: Colors.grey.shade200),
-               SizedBox(width: 8.w),
+              SizedBox(width: 8.w),
 
               Expanded(
                 child: Column(
@@ -106,21 +103,25 @@ class StudentCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style:  TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 14.sp),
                     ),
-                     SizedBox(height: 4.h),
+                    SizedBox(height: 4.h),
                     Text(
-                      "ID : $userId",
-                      style:  TextStyle(fontWeight: FontWeight.w600, color: AppColors2.blue, fontSize: 12.sp),
+                      "$userId",
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors2.blue,
+                          fontSize: 12.sp),
                     ),
-                     SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                         Icon(Icons.school, size: 14.sp, color: AppColors2.textGrey),
-                         SizedBox(width: 4.w),
-                        Text("$course", style:  TextStyle(color: AppColors2.textGrey, fontSize: 11.sp)),
-                      ],
-                    ),
+                    SizedBox(height: 4.h),
+                    // Row(
+                    //   children: [
+                    //      Icon(Icons.school, size: 14.sp, color: AppColors2.textGrey),
+                    //      SizedBox(width: 4.w),
+                    //     Text("$course", style:  TextStyle(color: AppColors2.textGrey, fontSize: 11.sp)),
+                    //   ],
+                    // ),
                   ],
                 ),
               ),

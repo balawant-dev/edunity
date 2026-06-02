@@ -239,13 +239,21 @@ class AttendanceRepo {
   Future<PunchResponseModel> employeePunch({
     required String locationId,
     required File punchImage,
+    required double lat,
+    required double lng,
+    required String action,
+    required String breakId,
     String? note,
     String? lateCause,
   }) async {
     FormData formData = FormData.fromMap({
       "location_id": locationId,
       "note": note,
+      "lat": lat.toString(),
+      "lng": lng.toString(),
+      "action": action,
       "late_cause": lateCause,
+      "shift_break_id": breakId,
       "punch_image": await MultipartFile.fromFile(
         punchImage.path,
       ),
@@ -257,6 +265,9 @@ class AttendanceRepo {
     for (var field in formData.fields) {
       print("Field: ${field.key} = ${field.value}");
     }
+    print("ACTION => $action");
+    print("LAT => $lat");
+    print("LNG => $lng");
     // Image details print karne ke liye
     for (var file in formData.files) {
       print("File: ${file.key} = ${file.value.filename}");
@@ -279,11 +290,17 @@ class AttendanceRepo {
   Future<PunchResponseModel> studentPunch({
     required String locationId,
     required File punchImage,
+    required double lat,
+    required double lng,
+    required String action,
     String? note,
     String? lateCause,
   }) async {
     FormData formData = FormData.fromMap({
       "location_id": locationId,
+      "lat": lat.toString(),
+      "lng": lng.toString(),
+      "action": action,
       "note": note,
       "late_cause": lateCause,
       "punch_image": await MultipartFile.fromFile(
